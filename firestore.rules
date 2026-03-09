@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Buildings collection
+    match /buildings/{bldgId} {
+      allow read, write: if true;
+    }
+
+    // Floors stored under buildings/<id>/floors/<floorNumber>
+    match /buildings/{bldg}/floors/{floor} {
+      allow read, write: if true;
+    }
+
+    // Faculty collection
+    match /faculty/{fid} {
+      allow read, write: if true;
+    }
+
+    // Halls, Labs, Locations, Routes, Users
+    match /{collection}/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -1,58 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from '../components/Header';
+import { FaSearch, FaArrowLeft } from 'react-icons/fa';
 import HallsLabsDirectory from '../components/HallsLabsDirectory';
 import HallsLabsForm from '../components/HallsLabsForm';
+import { fetchAllHalls, addHall, updateHall, deleteHall } from '../services/hallsService';
+import { fetchAllLabs, addLab, updateLab, deleteLab } from '../services/labsService';
+import { fetchAllBuildings } from '../services/buildingService';
 
 const HallsLabsPage = () => {
-  const [viewState, setViewState] = useState('list'); // list, add, edit
+  const location = useLocation();
+  const [viewState, setViewState] = useState(location.state?.openForm ? 'add' : 'list'); // list, add, edit
   const [selectedItem, setSelectedItem] = useState(null);
-  const [hallsData, setHallsData] = useState([
-    {
-      id: 1,
-      name: 'Lab 202',
-      type: 'LABORATORY',
-      building: 'Engineering Block A',
-      floor: '2nd Floor',
-      capacity: 45,
-      status: 'ACTIVE'
-    },
-    {
-      id: 2,
-      name: 'Lab 204',
-      type: 'LABORATORY',
-      building: 'Engineering Block A',
-      floor: '2nd Floor',
-      capacity: 38,
-      status: 'ACTIVE'
-    },
-    {
-      id: 3,
-      name: 'Hall A',
-      type: 'LECTURE HALL',
-      building: 'Science Building',
-      floor: '1st Floor',
-      capacity: 150,
-      status: 'ACTIVE'
-    },
-    {
-      id: 4,
-      name: 'Hall B',
-      type: 'LECTURE HALL',
-      building: 'Science Building',
-      floor: '1st Floor',
-      capacity: 120,
-      status: 'MAINTENANCE'
-    },
-    {
-      id: 5,
-      name: 'Computer Lab 101',
-      type: 'LABORATORY',
-      building: 'IT Building',
-      floor: 'Ground Floor',
-      capacity: 50,
-      status: 'ACTIVE'
+  const [hallsData, setHallsData] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [hData, lData, bData] = await Promise.all([
+        fetchAllHalls(),
+        fetchAllLabs(),
+        fetchAllBuildings()
+      ]);
+      setHallsData([...hData, ...lData]);
+      setBuildings(bData);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load data. Please refresh.');
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const handleAdd = () => {
     setSelectedItem(null);
@@ -64,21 +50,46 @@ const HallsLabsPage = () => {
     setViewState('edit');
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this hall/lab?')) {
-      setHallsData(hallsData.filter(item => item.id !== id));
+  const handleDelete = async (item) => {
+    if (window.confirm(`Are you sure you want to delete this ${item.category === 'LAB' ? 'lab' : 'hall'}?`)) {
+      try {
+        if (item.category === 'LAB') {
+          await deleteLab(item.id);
+        } else {
+          await deleteHall(item.id);
+        }
+        await loadData();
+      } catch (err) {
+        console.error("Delete failed:", err);
+        setError("Failed to delete. Please try again.");
+      }
     }
   };
 
-  const handleSave = (item) => {
-    if (viewState === 'add') {
-      setHallsData([...hallsData, item]);
-    } else {
-      setHallsData(hallsData.map(h => h.id === item.id ? item : h));
+  const handleSave = async (item) => {
+    try {
+      if (viewState === 'add') {
+        if (item.category === 'LAB') {
+          await addLab(item);
+        } else {
+          await addHall(item);
+        }
+      } else {
+        if (item.category === 'LAB') {
+          await updateLab(item.id, item);
+        } else {
+          await updateHall(item.id, item);
+        }
+      }
+      await loadData();
+      setViewState('list');
+      setSelectedItem(null);
+    } catch (err) {
+      console.error("Save failed:", err);
+      throw err;
     }
-    setViewState('list');
-    setSelectedItem(null);
   };
+
 
   const handleCancel = () => {
     setViewState('list');
@@ -86,11 +97,31 @@ const HallsLabsPage = () => {
   };
 
   if (viewState === 'add' || viewState === 'edit') {
+    const pageTitle = viewState === 'add'
+      ? "Add New Halls/Labs"
+      : `Edit ${selectedItem?.category === 'LAB' ? 'Lab' : 'Hall'}`;
+
     return (
       <div>
-        <Header title={viewState === 'add' ? "Add New Hall/Lab" : "Edit Hall/Lab"} />
+        <div className="hl-header-row">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+            <button type="button" className="hl-back-btn" onClick={handleCancel}>
+              <FaArrowLeft size={16} />
+            </button>
+            <h1>{pageTitle}</h1>
+          </div>
+          <div className="hl-header-controls">
+            <div className="hl-search-bar">
+              <FaSearch />
+              <input type="text" placeholder="Search..." disabled />
+            </div>
+            <div className="hl-user-avatar"></div>
+          </div>
+        </div>
+
         <HallsLabsForm
           item={selectedItem}
+          buildings={buildings}
           onSave={handleSave}
           onCancel={handleCancel}
         />
@@ -100,13 +131,40 @@ const HallsLabsPage = () => {
 
   return (
     <div>
-      <Header title="Halls & Labs Directory" />
-      <HallsLabsDirectory
-        hallsData={hallsData}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {/* Custom Header with Search & Avatar */}
+      <div className="hl-header-row">
+        <h1>Halls/Labs</h1>
+        <div className="hl-header-controls">
+          <div className="hl-search-bar">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="hl-user-avatar"></div>
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ padding: '1rem', marginBottom: '1rem', background: '#fee', border: '1px solid #fcc', borderRadius: '0.375rem', color: '#c33' }}>
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted-gray)' }}>Loading directory...</div>
+      ) : (
+        <HallsLabsDirectory
+          hallsData={hallsData}
+          searchTerm={searchTerm}
+          onAdd={handleAdd}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 };

@@ -10,7 +10,7 @@ import OutdoorMarkersPage from './pages/OutdoorMarkersPage';
 import HallsLabsPage from './pages/HallsLabsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
-import RouteManagement from './components/RouteManagement';
+import InteractiveRoutePage from './pages/InteractiveRoutePage';
 import './styles/main.css';
 
 function App() {
@@ -24,12 +24,7 @@ function App() {
             <Route path="/faculties" element={<FacultyManagement />} />
             <Route path="/buildings" element={<BuildingManagement />} />
             <Route path="/halls-labs" element={<HallsLabsPage />} />
-            <Route path="/routing" element={
-              <div>
-                <Header title="Route Management" />
-                <RouteManagement />
-              </div>
-            } />
+            <Route path="/routing" element={<InteractiveRoutePage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/users" element={<UserManagementPage />} />
             <Route path="/settings" element={<SettingsPage />} />

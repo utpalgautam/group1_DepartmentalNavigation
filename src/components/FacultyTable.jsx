@@ -1,74 +1,81 @@
-import { useState } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaTrash } from 'react-icons/fa';
 
-const FacultyTable = ({ facultyData, onEdit, onDelete }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const FacultyTable = ({ facultyData, buildings = [], onEdit, onDelete }) => {
+  const getBuildingName = (id) => buildings.find(b => b.id === id)?.name || id;
 
-  const filteredData = facultyData.filter(faculty =>
-    faculty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    faculty.cabin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    faculty.building.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getLocationString = (faculty) => {
+    const parts = [];
+    if (faculty.building) parts.push(getBuildingName(faculty.building));
+    if (faculty.floor) parts.push(`Floor ${faculty.floor}`);
+    if (faculty.cabin) parts.push(faculty.cabin);
+    return parts.join(', ') || 'Unassigned';
+  };
+
+  if (!facultyData || facultyData.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '3rem', color: '#9aa4af', fontStyle: 'italic' }}>
+        No faculty members found.
+      </div>
+    );
+  }
 
   return (
-    <div className="table-container" style={{ border: 'none', boxShadow: 'none', background: 'transparent', padding: 0 }}>
-      <div className="table-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <input
-          type="text"
-          placeholder="Search by name, cabin, or building..."
-          className="form-control"
-          style={{ width: 400, background: 'white' }}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+    <div>
+      <div className="fac-table-wrapper">
+        {/* Table Header block */}
+        <div className="fac-table-header">
+          <div>Faculty Member Name</div>
+          <div>Department</div>
+          <div>Cabin</div>
+          <div style={{ textAlign: 'center' }}>Action</div>
+        </div>
+
+        {/* Table Rows */}
+        {facultyData.map((faculty) => (
+          <div key={faculty.id} className="fac-table-row">
+            {/* 1. Name and Avatar */}
+            <div className="fac-table-cell fac-cell-user">
+              {faculty.imageUrl ? (
+                <img src={faculty.imageUrl} alt={faculty.name} className="fac-avatar" />
+              ) : (
+                <div className="fac-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9aa4af', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                  {faculty.name.substring(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span className="fac-cell-strong">{faculty.name}</span>
+                <span style={{ fontSize: '0.75rem', color: '#9aa4af', marginTop: '0.1rem' }}>
+                  {faculty.role || 'Faculty'}
+                </span>
+              </div>
+            </div>
+
+            {/* 2. Department */}
+            <div className="fac-table-cell" style={{ color: '#9aa4af' }}>
+              {/* Extract department from building name or default fallback */}
+              {faculty.department || 'Computer Science'}
+            </div>
+
+            {/* 3. Cabin / Location */}
+            <div className="fac-table-cell" style={{ color: '#9aa4af' }}>
+              {getLocationString(faculty)}
+            </div>
+
+            {/* 4. Actions */}
+            <div className="fac-table-cell" style={{ gap: '0.75rem', justifyContent: 'center' }}>
+              <button className="fac-action-pill" onClick={(e) => { e.stopPropagation(); onEdit(faculty); }}>
+                Edit Profile
+              </button>
+              <button className="fac-action-icon" onClick={(e) => { e.stopPropagation(); onDelete(faculty.id); }}>
+                <FaTrash size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="card" style={{ padding: '0', background: 'white', borderRadius: '0.5rem', boxShadow: 'var(--shadow)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-        <table className="table" style={{ width: '100%' }}>
-          <thead style={{ background: '#f8fafc' }}>
-            <tr>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>FACULTY NAME</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CABIN NO.</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>BUILDING</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>FLOOR</th>
-              <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((faculty) => (
-              <tr key={faculty.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <td style={{ padding: '1rem 1.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#ecfccb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#3f6212' }}>
-                      {faculty.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                    </div>
-                    <div>
-                      <div className="font-medium" style={{ fontWeight: 600, color: 'var(--dark-color)' }}>{faculty.name}</div>
-                      <div className="text-sm text-gray-500" style={{ fontSize: '0.8rem' }}>{faculty.role}</div>
-                    </div>
-                  </div>
-                </td>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{faculty.cabin}</td>
-                <td style={{ padding: '1rem 1.5rem' }}>{faculty.building}</td>
-                <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{faculty.floor}</td>
-                <td style={{ padding: '1rem 1.5rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button className="btn" style={{ padding: '0.25rem', color: 'var(--muted-gray)' }} onClick={() => onEdit(faculty)}>
-                      <FaEdit />
-                    </button>
-                    <button className="btn" style={{ padding: '0.25rem', color: 'var(--muted-gray)' }} onClick={() => onDelete(faculty.id)}>
-                      <FaTrash />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--gray-color)', borderTop: '1px solid var(--border-color)', fontSize: '0.875rem' }}>
-          Showing {filteredData.length} of {facultyData.length} records
-        </div>
+      <div style={{ padding: '1rem', color: '#9aa4af', fontSize: '0.85rem' }}>
+        Showing {facultyData.length} records
       </div>
     </div>
   );

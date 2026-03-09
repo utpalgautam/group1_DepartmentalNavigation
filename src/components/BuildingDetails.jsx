@@ -1,200 +1,444 @@
-import { useState } from 'react';
-import { FaPlus, FaPencilAlt, FaUpload, FaMap, FaLayerGroup, FaArrowLeft } from 'react-icons/fa';
-import FloorForm from './FloorForm';
+import { useState, useEffect, useRef } from 'react';
+import { FaArrowLeft, FaLayerGroup, FaCloudUploadAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { fetchFloors, addFloor, deleteFloor } from '../services/floorService';
+import { updateBuilding } from '../services/buildingService';
 
-const BuildingDetails = ({ building, onBack }) => {
-    const [floors, setFloors] = useState([
-        { id: 1, name: 'Floor 1 (Ground)', description: 'Admin Offices, Main Lobby, Cafeteria', status: 'MAP ACTIVE', mapActive: true },
-        { id: 2, name: 'Floor 2', description: 'Computer Labs, Research Wings', status: 'MAP REQUIRED', mapActive: false }
-    ]);
-    const [viewState, setViewState] = useState('list'); // list, add_floor, edit_floor
-    const [selectedFloor, setSelectedFloor] = useState(null);
+// ── helper: read SVG file as text ──────────────────────────────────────────
+const readSvgFile = (file) =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file);
+    });
 
+// ── SVG Viewer (inline render or <img>) ───────────────────────────────────
+const SvgViewer = ({ floor }) => {
+    if (!floor) {
+        return (
+            <div className="bd-svgviewer bd-svgviewer--empty">
+                <FaLayerGroup size={40} color="#c4cbd6" />
+                <span>Select a floor to preview its map</span>
+            </div>
+        );
+    }
+    if (!floor.svgContent && !floor.svgMapUrl) {
+        return (
+            <div className="bd-svgviewer bd-svgviewer--empty">
+                <FaLayerGroup size={40} color="#c4cbd6" />
+                <span>No map uploaded for Floor {floor.floorNumber}</span>
+            </div>
+        );
+    }
+    return (
+        <div className="bd-svgviewer">
+            {floor.svgContent ? (
+                <div
+                    className="bd-svgviewer__inner"
+                    dangerouslySetInnerHTML={{ __html: floor.svgContent }}
+                />
+            ) : (
+                <img
+                    src={floor.svgMapUrl}
+                    alt={`Floor ${floor.floorNumber} map`}
+                    className="bd-svgviewer__img"
+                />
+            )}
+        </div>
+    );
+};
+
+// ── File Upload Zone ───────────────────────────────────────────────────────
+const UploadZone = ({ fileName, onChange }) => {
+    const inputRef = useRef();
+    return (
+        <div className="bd-upload" onClick={() => inputRef.current.click()}>
+            <input
+                ref={inputRef}
+                type="file"
+                accept=".svg,image/svg+xml"
+                style={{ display: 'none' }}
+                onChange={onChange}
+            />
+            <FaCloudUploadAlt size={22} color="#9aa4af" />
+            <span className="bd-upload__label">
+                {fileName || 'Upload Map'}
+            </span>
+        </div>
+    );
+};
+
+// ── Main Component ─────────────────────────────────────────────────────────
+const BuildingDetails = ({ building, onBack, onEdit }) => {
+    const [floors, setFloors] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('add'); // 'add' | 'edit'
     const [previewFloor, setPreviewFloor] = useState(null);
+    const [error, setError] = useState('');
+
+    // Add floor form state
+    const [addForm, setAddForm] = useState({ floorNumber: '', name: '', mapFile: null, mapFileName: '', svgContent: null, mapFileObject: null });
+    const [addLoading, setAddLoading] = useState(false);
+    const [addError, setAddError] = useState('');
+    const [addSuccess, setAddSuccess] = useState('');
+
+    // Edit floor form state
+    const [editFloorId, setEditFloorId] = useState('');
+    const [editForm, setEditForm] = useState({ floorNumber: '', name: '', mapFile: null, mapFileName: '', svgContent: null, mapFileObject: null });
+    const [editLoading, setEditLoading] = useState(false);
+    const [editError, setEditError] = useState('');
+    const [editSuccess, setEditSuccess] = useState('');
+
+    useEffect(() => {
+        if (building?.id) loadFloors();
+    }, [building]);
+
+    const loadFloors = async () => {
+        try {
+            setLoading(true);
+            const data = await fetchFloors(building.id);
+            data.sort((a, b) => a.floorNumber - b.floorNumber);
+            setFloors(data);
+        } catch (err) {
+            setError('Failed to load floors');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // When user picks a floor for preview
+    const handleSelectFloor = (e) => {
+        const id = e.target.value;
+        const f = floors.find((fl) => fl.id === id);
+        setPreviewFloor(f || null);
+    };
+
+    // When user picks a floor in the Edit tab
+    const handleEditSelect = (e) => {
+        const id = e.target.value;
+        setEditFloorId(id);
+        const f = floors.find((fl) => fl.id === id);
+        if (f) {
+            setEditForm({
+                floorNumber: f.floorNumber,
+                name: f.name || '',
+                mapFileName: f.svgMapUrl || f.svgContent ? 'Existing Map' : '',
+                svgContent: f.svgContent || null,
+                mapFileObject: null,
+                svgMapUrl: f.svgMapUrl || null,
+            });
+        } else {
+            setEditForm({ floorNumber: '', name: '', mapFileName: '', svgContent: null, mapFileObject: null });
+        }
+        setEditError('');
+        setEditSuccess('');
+    };
+
+    const handleFileSelect = async (e, formSetter) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const isSvg = file.type.includes('svg') || file.name.toLowerCase().endsWith('.svg');
+        if (!isSvg) { setAddError('Please upload a valid SVG file'); return; }
+        const content = await readSvgFile(file);
+        formSetter(prev => ({ ...prev, mapFileName: file.name, mapFileObject: file, svgContent: content }));
+        setAddError('');
+        setEditError('');
+    };
+
+    // ── Add Floor Submit ──────────────────────────────────────────────────
+    const handleAddSubmit = async (e) => {
+        e.preventDefault();
+        setAddError('');
+        setAddSuccess('');
+        if (!addForm.floorNumber) { setAddError('Floor number is required'); return; }
+        setAddLoading(true);
+        try {
+            await addFloor(building.id, {
+                floorNumber: addForm.floorNumber,
+                name: addForm.name,
+                mapFileObject: addForm.mapFileObject,
+                svgContent: addForm.svgContent,
+            });
+            setAddSuccess('Floor added successfully!');
+            setAddForm({ floorNumber: '', name: '', mapFile: null, mapFileName: '', svgContent: null, mapFileObject: null });
+            await loadFloors();
+        } catch (err) {
+            setAddError(err.message || 'Failed to add floor');
+        } finally {
+            setAddLoading(false);
+        }
+    };
+
+    // ── Edit Floor Submit ─────────────────────────────────────────────────
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setEditError('');
+        setEditSuccess('');
+        if (!editFloorId) { setEditError('Please select a floor to edit'); return; }
+        if (!editForm.floorNumber) { setEditError('Floor number is required'); return; }
+        setEditLoading(true);
+        try {
+            await addFloor(building.id, {
+                floorNumber: editForm.floorNumber,
+                name: editForm.name,
+                mapFileObject: editForm.mapFileObject,
+                svgContent: editForm.svgContent,
+                svgMapUrl: editForm.svgMapUrl || null,
+            });
+            setEditSuccess('Floor updated successfully!');
+            await loadFloors();
+        } catch (err) {
+            setEditError(err.message || 'Failed to update floor');
+        } finally {
+            setEditLoading(false);
+        }
+    };
 
     if (!building) return null;
 
-    const handleAddFloor = () => {
-        setSelectedFloor(null);
-        setViewState('add_floor');
-    };
-
-    const handleEditFloor = (floor) => {
-        setSelectedFloor(floor);
-        setViewState('edit_floor');
-    };
-
-    const handleSaveFloor = (floorData) => {
-        if (viewState === 'add_floor') {
-            setFloors([...floors, { ...floorData, id: floors.length + 1 }]);
-        } else if (viewState === 'edit_floor') {
-            setFloors(floors.map(f => f.id === floorData.id ? floorData : f));
-        }
-        setViewState('list');
-        setSelectedFloor(null);
-    };
-
-    const handleCancel = () => {
-        setViewState('list');
-        setSelectedFloor(null);
-    };
-
-    if (viewState === 'add_floor' || viewState === 'edit_floor') {
-        return (
-            <FloorForm
-                floor={selectedFloor}
-                onSave={handleSaveFloor}
-                onCancel={handleCancel}
-            />
-        );
-    }
+    const lat = building.latitude?.toFixed(5) ?? '—';
+    const lng = building.longitude?.toFixed(5) ?? '—';
+    const totalFloors = building.totalFloors ?? floors.length ?? 0;
 
     return (
-        <div className="building-details">
-            {/* Header */}
-            <div style={{ marginBottom: '2rem' }}>
-                <button
-                    onClick={onBack}
-                    className="btn btn-outline"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', padding: '0.5rem 1rem' }}
-                >
-                    <FaArrowLeft /> Back to Directory
-                </button>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {building.name}
-                        <span style={{ color: 'var(--muted-gray)', fontSize: '1.25rem' }}>/ Floors</span>
-                    </h2>
-                    <button onClick={handleAddFloor} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                        <FaPlus /> Add Floor
+        <div className="bd-page">
+
+            {/* ── Page Header ─────────────────────────────────────── */}
+            <div className="bd-topbar">
+                <div className="bd-topbar__left">
+                    <button className="bd-back-btn" onClick={onBack}>
+                        <FaArrowLeft size={14} />
                     </button>
+                    <h1 className="bd-topbar__title">{building.name}</h1>
                 </div>
+                <div className="bd-topbar__search">
+                    <span className="bd-topbar__search-icon">🔍</span>
+                    <input className="bd-topbar__search-input" placeholder="Search..." />
+                </div>
+                <div className="bd-topbar__avatar">AR</div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                {/* Floors List */}
-                <div className="floors-list">
-                    {floors.map(floor => (
-                        <div key={floor.id} className="card" style={{ display: 'flex', padding: '1.5rem', marginBottom: '1rem', background: floor.status === 'MAP ACTIVE' ? 'white' : '#fefce8', borderRadius: '0.5rem', boxShadow: 'var(--shadow)', border: floor.status === 'MAP ACTIVE' ? '1px solid var(--border-color)' : '2px solid #fef08a', alignItems: 'center', gap: '1.5rem' }}>
-                            <div style={{ width: '60px', height: '60px', background: floor.status === 'MAP ACTIVE' ? '#f1f5f9' : '#fffbeb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: floor.status === 'MAP ACTIVE' ? '#cbd5e1' : '#fde047' }}>
-                                {floor.status === 'MAP ACTIVE' ? <FaMap size={24} /> : <FaUpload size={24} />}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem' }}>{floor.name}</div>
-                                <div style={{ color: 'var(--gray-color)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{floor.description}</div>
-                                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem' }}>
-                                    {floor.status === 'MAP ACTIVE' ? (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--success-color)', fontWeight: 600 }}>
-                                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success-color)' }}></span>
-                                            MAP ACTIVE
-                                        </span>
-                                    ) : (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#ef4444', fontWeight: 600 }}>
-                                            <span style={{ width: '0', height: '0', borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderBottom: '8px solid #ef4444' }}></span>
-                                            MAP REQUIRED
-                                        </span>
-                                    )}
-                                    {floor.status === 'MAP ACTIVE' && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--gray-color)' }}>
-                                            <FaLayerGroup size={12} /> 42 POIs
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-                                {floor.status === 'MAP ACTIVE' && (
-                                    <button
-                                        className="btn btn-primary"
-                                        style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}
-                                        onClick={() => setPreviewFloor(floor)}
-                                    >
-                                        Preview Map
-                                    </button>
-                                )}
-                                {floor.status === 'MAP REQUIRED' && (
-                                    <button className="btn" style={{ background: '#d9f99d', color: '#365314', fontWeight: 700, fontSize: '0.8rem' }}>UPLOAD MAP</button>
-                                )}
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '1rem', marginLeft: '1rem' }}>
-                                <FaPencilAlt
-                                    style={{ cursor: 'pointer', color: 'var(--gray-color)' }}
-                                    onClick={() => handleEditFloor(floor)}
-                                />
-                                {floor.status === 'MAP ACTIVE' && (
-                                    <>
-                                        <div style={{ width: '1px', height: '20px', background: 'var(--border-color)' }}></div>
-                                        <span style={{ color: 'var(--primary-color)', fontWeight: 600, fontSize: '1.2rem' }}>A</span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+            {/* ── Building Info Card (dark) ────────────────────────── */}
+            <div className="bd-infocard">
+                <div className="bd-infocard__thumb">
+                    {building.imageUrl
+                        ? <img src={building.imageUrl} alt={building.name} />
+                        : <div className="bd-infocard__thumb-placeholder"><FaLayerGroup size={20} color="#9aa4af" /></div>}
                 </div>
-
-                {/* Sidebar Details */}
-                <div className="building-sidebar">
-                    <div className="card" style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '0.5rem', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
-                        <h3 style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted-gray)', letterSpacing: '0.05em', marginBottom: '1rem', textTransform: 'uppercase' }}>Building Details</h3>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted-gray)', marginBottom: '0.25rem' }}>CAMPUS ADDRESS</div>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>102 Innovation Drive, North Campus</div>
-                        </div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted-gray)', marginBottom: '0.25rem' }}>COORDINATES</div>
-                            <div style={{ background: 'white', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.85rem', fontFamily: 'monospace' }}>
-                                40.7128° N, 74.0060° W
-                            </div>
-                        </div>
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted-gray)', marginBottom: '0.25rem' }}>PRIMARY CONTACT</div>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>Dean of Engineering (Ext. 4410)</div>
-                        </div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--muted-gray)', marginBottom: '0.25rem' }}>ENTRY POINTS (LAT / LONG)</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                <div style={{ background: 'white', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.85rem', fontFamily: 'monospace' }}>
-                                    Lat: {building.latitude || 'N/A'}
-                                </div>
-                                <div style={{ background: 'white', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.85rem', fontFamily: 'monospace' }}>
-                                    Long: {building.longitude || 'N/A'}
-                                </div>
-                            </div>
-                        </div>
+                <div className="bd-infocard__text">
+                    <div className="bd-infocard__floors">
+                        <FaLayerGroup size={13} color="#9aa4af" />
+                        {totalFloors} Floor{totalFloors !== 1 ? 's' : ''}
                     </div>
-
+                    <div className="bd-infocard__coords">
+                        <FaMapMarkerAlt size={11} color="#9aa4af" />
+                        {lat}, {lng}
+                    </div>
                 </div>
+                <button className="bd-infocard__edit-btn" onClick={onEdit}>Edit</button>
             </div>
 
-            {/* Map Preview Modal */}
-            {previewFloor && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-                }}>
-                    <div style={{ background: 'white', padding: '2rem', borderRadius: '0.5rem', maxWidth: '800px', width: '90%', maxHeight: '90vh', overflow: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Map: {previewFloor.name}</h3>
-                            <button onClick={() => setPreviewFloor(null)} className="btn" style={{ fontSize: '1.5rem', lineHeight: 1 }}>&times;</button>
-                        </div>
-                        <div style={{ background: '#f1f5f9', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', border: '2px dashed #cbd5e1' }}>
-                            <div style={{ textAlign: 'center', color: '#64748b' }}>
-                                <FaMap size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                                <div>Map Preview Placeholder</div>
-                                <div style={{ fontSize: '0.8rem' }}>{previewFloor.mapFile || 'No file uploaded'}</div>
-                            </div>
-                        </div>
-                        <div style={{ marginTop: '1rem', textAlign: 'right' }}>
-                            <button onClick={() => setPreviewFloor(null)} className="btn btn-primary">Close</button>
-                        </div>
-                    </div>
-                </div>
+            {error && (
+                <div className="bd-error">{error}</div>
             )}
+
+            {/* ── Two-Column Layout ────────────────────────────────── */}
+            <div className="bd-layout">
+
+                {/* LEFT: Floor selector + SVG Preview */}
+                <div className="bd-left">
+                    {/* Floor Selector Dropdown */}
+                    <div className="bd-floor-select-wrap">
+                        <select
+                            className="bd-floor-select"
+                            onChange={handleSelectFloor}
+                            defaultValue=""
+                        >
+                            <option value="" disabled>Select Floor Map</option>
+                            {floors.map((f) => (
+                                <option key={f.id} value={f.id}>
+                                    Floor {f.floorNumber}{f.name ? ` — ${f.name}` : ''}
+                                </option>
+                            ))}
+                        </select>
+                        <span className="bd-floor-select__caret">▾</span>
+                    </div>
+
+                    {/* SVG Map Viewer */}
+                    {loading ? (
+                        <div className="bd-svgviewer bd-svgviewer--empty">
+                            <span style={{ color: '#9aa4af' }}>Loading floors...</span>
+                        </div>
+                    ) : (
+                        <SvgViewer floor={previewFloor} />
+                    )}
+                </div>
+
+                {/* RIGHT: Add / Edit Tabs */}
+                <div className="bd-right">
+                    {/* Tab Switcher */}
+                    <div className="bd-tabs">
+                        <button
+                            className={`bd-tab ${activeTab === 'add' ? 'bd-tab--active' : ''}`}
+                            onClick={() => { setActiveTab('add'); setAddError(''); setAddSuccess(''); }}
+                        >
+                            Add Floor Map
+                        </button>
+                        <button
+                            className={`bd-tab ${activeTab === 'edit' ? 'bd-tab--active' : ''}`}
+                            onClick={() => { setActiveTab('edit'); setEditError(''); setEditSuccess(''); }}
+                        >
+                            Edit Floor Map
+                        </button>
+                    </div>
+
+                    {/* ── ADD FLOOR FORM ── */}
+                    {activeTab === 'add' && (
+                        <form className="bd-form" onSubmit={handleAddSubmit}>
+                            {addError && <div className="bd-form__error">{addError}</div>}
+                            {addSuccess && <div className="bd-form__success">{addSuccess}</div>}
+
+                            <div className="bd-form__row">
+                                <div className="bd-form__group bd-form__group--sm">
+                                    <label className="bd-form__label">Floor Number</label>
+                                    <input
+                                        className="bd-form__input"
+                                        type="number"
+                                        placeholder="e.g. 1"
+                                        value={addForm.floorNumber}
+                                        onChange={e => setAddForm(p => ({ ...p, floorNumber: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="bd-form__group bd-form__group--lg">
+                                    <label className="bd-form__label">Floor Name</label>
+                                    <input
+                                        className="bd-form__input"
+                                        type="text"
+                                        placeholder="e.g. Ground Floor"
+                                        value={addForm.name}
+                                        onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="bd-form__group">
+                                <label className="bd-form__label">Floor Number</label>
+                                <input
+                                    className="bd-form__input"
+                                    type="number"
+                                    placeholder="e.g. 1"
+                                    value={addForm.floorNumber}
+                                    onChange={e => setAddForm(p => ({ ...p, floorNumber: e.target.value }))}
+                                />
+                            </div>
+
+                            <div className="bd-form__group">
+                                <label className="bd-form__label">Floor Map (SVG only)</label>
+                                <UploadZone
+                                    fileName={addForm.mapFileName}
+                                    onChange={e => handleFileSelect(e, setAddForm)}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="bd-form__submit"
+                                disabled={addLoading}
+                            >
+                                {addLoading ? 'Saving...' : 'Add Map'}
+                            </button>
+                        </form>
+                    )}
+
+                    {/* ── EDIT FLOOR FORM ── */}
+                    {activeTab === 'edit' && (
+                        <form className="bd-form" onSubmit={handleEditSubmit}>
+                            {editError && <div className="bd-form__error">{editError}</div>}
+                            {editSuccess && <div className="bd-form__success">{editSuccess}</div>}
+
+                            <div className="bd-form__group">
+                                <label className="bd-form__label">Select Floor</label>
+                                <input
+                                    className="bd-form__input"
+                                    list="floors-list"
+                                    placeholder="e.g. 1"
+                                    value={editFloorId}
+                                    onChange={(e) => {
+                                        const id = e.target.value;
+                                        setEditFloorId(id);
+                                        const f = floors.find(fl => fl.id === id);
+                                        if (f) {
+                                            setEditForm({
+                                                floorNumber: f.floorNumber,
+                                                name: f.name || '',
+                                                mapFileName: (f.svgMapUrl || f.svgContent) ? 'Existing Map' : '',
+                                                svgContent: f.svgContent || null,
+                                                mapFileObject: null,
+                                                svgMapUrl: f.svgMapUrl || null,
+                                            });
+                                        }
+                                    }}
+                                />
+                                <datalist id="floors-list">
+                                    {floors.map(f => (
+                                        <option key={f.id} value={f.id}>Floor {f.floorNumber}{f.name ? ` — ${f.name}` : ''}</option>
+                                    ))}
+                                </datalist>
+                            </div>
+
+                            <div className="bd-form__row">
+                                <div className="bd-form__group bd-form__group--sm">
+                                    <label className="bd-form__label">Floor Number</label>
+                                    <input
+                                        className="bd-form__input"
+                                        type="number"
+                                        placeholder="e.g. 1"
+                                        value={editForm.floorNumber}
+                                        onChange={e => setEditForm(p => ({ ...p, floorNumber: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="bd-form__group bd-form__group--lg">
+                                    <label className="bd-form__label">Floor Name</label>
+                                    <input
+                                        className="bd-form__input"
+                                        type="text"
+                                        placeholder="e.g. Ground Floor"
+                                        value={editForm.name}
+                                        onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="bd-form__group">
+                                <label className="bd-form__label">Floor Number</label>
+                                <input
+                                    className="bd-form__input"
+                                    type="number"
+                                    placeholder="e.g. 1"
+                                    value={editForm.floorNumber}
+                                    onChange={e => setEditForm(p => ({ ...p, floorNumber: e.target.value }))}
+                                />
+                            </div>
+
+                            <div className="bd-form__group">
+                                <label className="bd-form__label">Floor Map (SVG only)</label>
+                                <UploadZone
+                                    fileName={editForm.mapFileName}
+                                    onChange={e => handleFileSelect(e, setEditForm)}
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="bd-form__submit"
+                                disabled={editLoading}
+                            >
+                                {editLoading ? 'Updating...' : 'Update Details'}
+                            </button>
+                        </form>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
