@@ -8,6 +8,7 @@ import '../profile/profile_screen.dart';
 import 'search_screen.dart';
 import '../directory/directory_screen.dart';
 import '../map/offline_maps_screen.dart';
+import '../map/explore_map_screen.dart';
 import '../../widgets/bottom_nav_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -270,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildMapCard() {
     return GestureDetector(
       onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const OutdoorNavigationScreen())),
+          MaterialPageRoute(builder: (_) => const ExploreMapScreen())),
       child: Container(
         width: double.infinity,
         height: 180,
