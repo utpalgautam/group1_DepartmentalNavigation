@@ -11,15 +11,18 @@ plugins {
 android {
     namespace = "com.nitc.dept_nav_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.1.13356709"
 
+    buildFeatures {
+        prefab true
+    }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "21"
     }
 
     defaultConfig {
@@ -27,7 +30,7 @@ android {
         applicationId = "com.nitc.dept_nav_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdkVersion = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -44,4 +47,15 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Empty but necessary for configurations to hook correctly in some cases
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.core:core-ktx:1.15.0'
+        force 'androidx.core:core:1.15.0'
+    }
 }
