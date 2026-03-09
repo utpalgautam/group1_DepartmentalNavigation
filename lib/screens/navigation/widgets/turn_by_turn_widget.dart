@@ -50,7 +50,7 @@ class TurnByTurnWidget extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
+                      const Text(
                         'Turn-by-Turn',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -69,7 +69,7 @@ class TurnByTurnWidget extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 instruction,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),

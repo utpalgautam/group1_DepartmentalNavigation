@@ -77,7 +77,7 @@ class _CustomNavigationControlsState extends State<CustomNavigationControls> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          const Text(
             'NIT Calicut, Keralam',
             style: TextStyle(
               fontSize: 14,
@@ -259,14 +259,14 @@ class _CustomNavigationControlsState extends State<CustomNavigationControls> {
                   const SizedBox(height: 4),
                   Text(
                     '${widget.time} ahead',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -277,8 +277,8 @@ class _CustomNavigationControlsState extends State<CustomNavigationControls> {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
+                    SizedBox(height: 4),
+                    Text(
                       'To reach\nDestination.',
                       textAlign: TextAlign.right,
                       style: TextStyle(

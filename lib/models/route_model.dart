@@ -1,5 +1,6 @@
 /// A route defined by an ordered list of (x, y) SVG/pixel coordinates
 /// that are drawn directly on the floor-plan map.
+library;
 
 class RouteModel {
   final String id;

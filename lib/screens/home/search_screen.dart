@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
-import '../../widgets/custom_text_field.dart';
 import '../../services/firestore_service.dart';
 import '../../models/location_model.dart';
-import '../../models/building_model.dart';
 import '../../providers/auth_provider.dart' as app_auth;
 import '../../widgets/bottom_nav_bar.dart';
 import '../directory/directory_screen.dart';
@@ -186,18 +184,12 @@ class _SearchScreenState extends State<SearchScreen> {
                 children: [
                   Container(
                     decoration: const BoxDecoration(
-                      color: Colors.black,
+                      color: Colors.white,
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () {
-                         if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                         } else {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-                         }
-                      },
+                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -292,18 +284,16 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                for (int i = 0; i < (_suggestedPlaces.length > 2 ? 2 : _suggestedPlaces.length); i++) ...[
-                  if (i > 0) const SizedBox(width: 16),
-                  Expanded(
-                    child: AspectRatio(
-                      aspectRatio: 1.3, // Wider than it is tall, reducing height
-                      child: _buildSuggestedCard(_suggestedPlaces[i], i),
-                    ),
-                  ),
-                ],
-              ],
+            SizedBox(
+              height: 130, // Adjust height to prevent RenderFlex overflow
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _suggestedPlaces.length > 2 ? 2 : _suggestedPlaces.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 16),
+                itemBuilder: (context, index) {
+                  return _buildSuggestedCard(_suggestedPlaces[index], index);
+                },
+              ),
             ),
             const SizedBox(height: 32),
           ],
@@ -379,88 +369,66 @@ class _SearchScreenState extends State<SearchScreen> {
     // As per user request, use the dark card design for the first, light for the second
     final bool isDark = index == 0;
     
-    final Color bgColor = isDark ? const Color(0xFF1B1B1C) : Colors.white;
+    final Color bgColor = isDark ? const Color(0xFF1C1D21) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
     final Color subtitleColor = isDark ? const Color(0xFFAAAAAA) : const Color(0xFF888888);
-    final Color faintCircleColor = isDark ? const Color(0xFF242425) : const Color(0xFFE5E5E5);
-    final Color iconBoxColor = isDark ? const Color(0xFF333333) : const Color(0xFFCDCDCD);
+    final Color iconBoxColor = isDark ? const Color(0xFF2E2E32) : const Color(0xFFEEEEEE);
     
     // Choose an icon based on location type
-    IconData iconData = Icons.domain;
-    if (location.type == LocationType.lab) iconData = Icons.science;
-    else if (location.type == LocationType.faculty) iconData = Icons.person;
+    IconData iconData = Icons.location_city;
+    if (location.type == LocationType.lab) {
+      iconData = Icons.science;
+    } else if (location.type == LocationType.faculty) iconData = Icons.person;
 
     return GestureDetector(
       onTap: () => _onLocationSelected(location),
       child: Container(
-        clipBehavior: Clip.antiAlias,
+        width: 140,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
              if (!isDark)
                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withOpacity(0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4)
                ),
           ]
         ),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned(
-              right: -30,
-              top: -30,
+            Align(
+              alignment: Alignment.topRight,
               child: Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  color: faintCircleColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 16,
-              top: 16,
-              child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: iconBoxColor,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(iconData, color: textColor, size: 24),
+                child: Icon(iconData, color: textColor, size: 20),
               ),
             ),
-            Positioned(
-              left: 16,
-              bottom: 16,
-              right: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Nearby',
-                    style: TextStyle(
-                      color: subtitleColor,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    location.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
+            const Spacer(),
+            Text(
+              'Nearby',
+              style: TextStyle(
+                color: subtitleColor,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              location.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
               ),
             ),
           ],

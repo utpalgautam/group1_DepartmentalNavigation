@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/colors.dart';
 import '../../models/location_model.dart';
 import '../../services/firestore_service.dart';
 import '../../providers/auth_provider.dart' as app_auth;
@@ -240,8 +239,9 @@ class _RecentSearchesScreenState extends State<RecentSearchesScreen> {
 
     // Icon fallback for the image
     IconData iconData = Icons.location_on;
-    if (location.type == LocationType.lab) iconData = Icons.science;
-    else if (location.type == LocationType.faculty) iconData = Icons.person;
+    if (location.type == LocationType.lab) {
+      iconData = Icons.science;
+    } else if (location.type == LocationType.faculty) iconData = Icons.person;
     else if (location.type == LocationType.hall) iconData = Icons.meeting_room;
 
     return Container(

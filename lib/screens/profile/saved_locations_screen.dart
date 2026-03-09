@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/colors.dart';
 import '../../models/location_model.dart';
 import '../../services/firestore_service.dart';
 import '../../providers/auth_provider.dart' as app_auth;
@@ -300,8 +299,9 @@ class _SavedLocationsScreenState extends State<SavedLocationsScreen> {
     final String subtitleText = floorText.isEmpty ? buildingName : '$buildingName    $floorText';
 
     IconData iconData = Icons.location_on;
-    if (location.type == LocationType.lab) iconData = Icons.science;
-    else if (location.type == LocationType.faculty) iconData = Icons.person;
+    if (location.type == LocationType.lab) {
+      iconData = Icons.science;
+    } else if (location.type == LocationType.faculty) iconData = Icons.person;
     else if (location.type == LocationType.hall) iconData = Icons.meeting_room;
 
     return Container(
@@ -371,7 +371,7 @@ class _SavedLocationsScreenState extends State<SavedLocationsScreen> {
               child: Row(
                 children: [
                   // Walk Button
-                  Expanded(
+                  const Expanded(
                     child: Center(
                        child: Icon(Icons.directions_walk, color: Colors.black, size: 20),
                     ),

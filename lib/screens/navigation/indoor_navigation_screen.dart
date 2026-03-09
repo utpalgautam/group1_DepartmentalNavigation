@@ -5,8 +5,6 @@ import '../../models/route_model.dart';
 import '../../models/location_model.dart';
 import '../../services/firestore_service.dart';
 import '../../core/constants/colors.dart';
-import 'package:provider/provider.dart';
-import '../../providers/navigation_provider.dart';
 
 class IndoorNavigationScreen extends StatefulWidget {
   final String buildingId;
@@ -37,7 +35,7 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
   RouteModel? _currentRoute;
   LocationModel? _destination;
   
-  bool _showInstructionPanel = true;
+  final bool _showInstructionPanel = true;
   String _currentInstruction = 'Loading route...';
   
   // To handle the two-phase routing if destination is not on floor 0
@@ -162,7 +160,6 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
             actions: [
                TextButton(
                   onPressed: () {
-                     Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
                      Navigator.pop(context); // close dialog
                      Navigator.pop(context); // close nav screen
                   },
@@ -278,10 +275,7 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
          child: Row(
             children: [
                GestureDetector(
-                onTap: () {
-                   Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
-                   Navigator.pop(context);
-                },
+                onTap: () => Navigator.pop(context),
                  child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -298,7 +292,7 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
                     children: [
                       Text(
                         '$floorName Floor ${widget.buildingName}',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                       ),
                       Text(
                          _currentInstruction.replaceAll('\n', ' '),
@@ -315,10 +309,7 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
                     shape: const CircleBorder(),
                  ),
                  icon: const Icon(Icons.close, color: Colors.black),
-                 onPressed: () {
-                    Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
-                    Navigator.pop(context);
-                 },
+                 onPressed: () => Navigator.pop(context),
                ),
             ],
          ),
@@ -357,7 +348,7 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
+                  const Text(
                     'Flow Blue line',
                     style: TextStyle(
                       fontSize: 12,
@@ -398,10 +389,7 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
