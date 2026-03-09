@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="osmium/1.16.0">
+  <bounds minlat="11.318" minlon="75.929" maxlat="11.325" maxlon="75.94"/>
+  <node id="538871837" version="4" timestamp="2019-09-20T09:54:26Z" uid="6518397" user="haabee" changeset="74711273" lat="11.3200475" lon="75.9327223">
+    <tag k="barrier" v="gate"/>
+    <tag k="bicycle" v="yes"/>
+    <tag k="foot" v="yes"/>
+    <tag k="motorcar" v="yes"/>
+    <tag k="motorcycle" v="yes"/>
+    <tag k="name" v="NIT Calicut Main Gate"/>
+  </node>
+  <node id="539330275" version="5" timestamp="2019-09-20T09:54:26Z" uid="6518397" user="haabee" changeset="74711273" lat="11.3199322" lon="75.9325598"/>
+  <node id="539386292" version="1" timestamp="2009-10-24T10:48:16Z" uid="70126" user="Pirate Praveen" changeset="2936016" lat="11.3212865" lon="75.9338524"/>
+  <node id="539386293" version="1" timestamp="2009-10-24T10:48:16Z" uid="70126" user="Pirate Praveen" changeset="2936016" lat="11.3211439" lon="75.9336746"/>
+  <node id="539386295" version="2" timestamp="2025-01-17T15:42:39Z" uid="22087659" user="Aman03062006" changeset="161460852" lat="11.321503" lon="75.9340828"/>
+  <node id="539386299" version="3" timestamp="2019-09-20T09:54:26Z" uid="6518397" user="haabee" changeset="74711273" lat="11.3199749" lon="75.9326895"/>
+  <node id="539386300" version="2" timestamp="2019-09-20T09:54:26Z" uid="6518397" user="haabee" changeset="74711273" lat="11.3202869" lon="75.9329257"/>
+  <node id="539386302" version="3" timestamp="2025-06-07T18:16:58Z" uid="20980235" user="Nandini77" changeset="167322469" lat="11.3206061" lon="75.9332198"/>
+  <node id="12088311904" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3200731" lon="75.9327441"/>
+  <node id="12088311906" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3202934" lon="75.9329323"/>
+  <node id="12088311907" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.320358" lon="75.9329987"/>
+  <node id="12088311908" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3204071" lon="75.9330491"/>
+  <node id="12088311909" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3204475" lon="75.9330906"/>
+  <node id="12088311912" version="2" timestamp="2025-06-07T18:16:58Z" uid="20980235" user="Nandini77" changeset="167322469" lat="11.3206375" lon="75.9332476"/>
+  <node id="12088311913" version="2" timestamp="2025-06-07T18:16:58Z" uid="20980235" user="Nandini77" changeset="167322469" lat="11.3206856" lon="75.933288"/>
+  <node id="12088311917" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3209087" lon="75.9334803"/>
+  <node id="12088311918" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3209462" lon="75.9335113"/>
+  <node id="12088311919" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3209881" lon="75.9335459"/>
+  <node id="12088311920" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3210363" lon="75.9335857"/>
+  <node id="12088311921" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3210834" lon="75.9336246"/>
+  <node id="12088311922" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3211951" lon="75.9337385"/>
+  <node id="12088311923" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3212227" lon="75.9337728"/>
+  <node id="12088311924" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3212523" lon="75.9338097"/>
+  <node id="12088311926" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3213309" lon="75.9338995"/>
+  <node id="12088311927" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3213652" lon="75.9339359"/>
+  <node id="12088311929" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3213103" lon="75.9338777"/>
+  <node id="12088311935" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.321022" lon="75.9335739"/>
+  <node id="12088311949" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3201784" lon="75.9328335"/>
+  <node id="12088311950" version="1" timestamp="2024-08-02T04:53:41Z" uid="21810143" user="smart_parking" changeset="154718161" lat="11.3201229" lon="75.9327863"/>
+  <node id="12509639913" version="1" timestamp="2025-01-17T15:56:53Z" uid="22087659" user="Aman03062006" changeset="161461370" lat="11.3214898" lon="75.9340958"/>
+  <node id="12509639914" version="1" timestamp="2025-01-17T15:56:53Z" uid="22087659" user="Aman03062006" changeset="161461370" lat="11.3211335" lon="75.9336912"/>
+  <node id="12509639915" version="1" timestamp="2025-01-17T15:56:53Z" uid="22087659" user="Aman03062006" changeset="161461370" lat="11.3209554" lon="75.9335417"/>
+  <node id="12509639916" version="1" timestamp="2025-01-17T15:56:53Z" uid="22087659" user="Aman03062006" changeset="161461370" lat="11.3206411" lon="75.9332767"/>
+  <node id="12509639917" version="1" timestamp="2025-01-17T15:56:53Z" uid="22087659" user="Aman03062006" changeset="161461370" lat="11.3204436" lon="75.9331127"/>
+  <node id="12509639918" version="1" timestamp="2025-01-17T15:56:53Z" uid="22087659" user="Aman03062006" changeset="161461370" lat="11.3200938" lon="75.9327826"/>
+  <node id="12509639919" version="1" timestamp="2025-01-17T15:56:53Z" uid="22087659" user="Aman03062006" changeset="161461370" lat="11.3200415" lon="75.9327396">
+    <tag k="barrier" v="gate"/>
+  </node>
+  <way id="43055967" version="19" timestamp="2025-06-07T18:16:58Z" uid="20980235" user="Nandini77" changeset="167322469">
+    <nd ref="539330275"/>
+    <nd ref="539386299"/>
+    <nd ref="538871837"/>
+    <nd ref="12088311904"/>
+    <nd ref="12088311950"/>
+    <nd ref="12088311949"/>
+    <nd ref="539386300"/>
+    <nd ref="12088311906"/>
+    <nd ref="12088311907"/>
+    <nd ref="12088311908"/>
+    <nd ref="12088311909"/>
+    <nd ref="539386302"/>
+    <nd ref="12088311912"/>
+    <nd ref="12088311913"/>
+    <nd ref="12088311917"/>
+    <nd ref="12088311918"/>
+    <nd ref="12088311919"/>
+    <nd ref="12088311935"/>
+    <nd ref="12088311920"/>
+    <nd ref="12088311921"/>
+    <nd ref="539386293"/>
+    <nd ref="12088311922"/>
+    <nd ref="12088311923"/>
+    <nd ref="12088311924"/>
+    <nd ref="539386292"/>
+    <nd ref="12088311929"/>
+    <nd ref="12088311926"/>
+    <nd ref="12088311927"/>
+    <nd ref="539386295"/>
+    <tag k="access" v="private"/>
+    <tag k="highway" v="service"/>
+    <tag k="lit" v="yes"/>
+    <tag k="name" v="Rajpath"/>
+    <tag k="oneway" v="yes"/>
+  </way>
+  <way id="1352104793" version="4" timestamp="2025-04-12T02:14:15Z" uid="22746274" user="Thegoodlife17057" changeset="164838637">
+    <nd ref="12509639913"/>
+    <nd ref="12509639914"/>
+    <nd ref="12509639915"/>
+    <nd ref="12509639916"/>
+    <nd ref="12509639917"/>
+    <nd ref="12509639918"/>
+    <nd ref="12509639919"/>
+    <nd ref="539386299"/>
+    <tag k="highway" v="service"/>
+    <tag k="name" v="Rajpath"/>
+    <tag k="oneway" v="yes"/>
+    <tag k="surface" v="asphalt"/>
+  </way>
+</osm>

@@ -1,0 +1,51 @@
+name: dept_nav_app
+description: NITC Campus Department Navigator App
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  
+  # Maps & Navigation
+  maplibre_gl: ^0.19.0  # For vector map rendering
+  http: ^1.1.0          # For API calls to GraphHopper
+  geolocator: ^10.1.0   # For device location
+  geocoding: ^2.1.1     # For address lookup
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # UI Components
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.1
+  
+  # Utilities
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.1
+  dio: ^5.4.0           # For file downloads
+  flutter_polyline_points: ^2.0.0
+  image_picker: ^1.2.0  # For profile pictures
+  google_sign_in: ^7.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/maps/
+    - assets/icons/
+    - assets/images/onboarding/
+    - lib/screens/home/image 36.png
