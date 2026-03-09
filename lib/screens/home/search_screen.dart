@@ -292,16 +292,18 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 130, // Adjust height to prevent RenderFlex overflow
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _suggestedPlaces.length > 2 ? 2 : _suggestedPlaces.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 16),
-                itemBuilder: (context, index) {
-                  return _buildSuggestedCard(_suggestedPlaces[index], index);
-                },
-              ),
+            Row(
+              children: [
+                for (int i = 0; i < (_suggestedPlaces.length > 2 ? 2 : _suggestedPlaces.length); i++) ...[
+                  if (i > 0) const SizedBox(width: 16),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1.3, // Wider than it is tall, reducing height
+                      child: _buildSuggestedCard(_suggestedPlaces[i], i),
+                    ),
+                  ),
+                ],
+              ],
             ),
             const SizedBox(height: 32),
           ],
@@ -377,65 +379,88 @@ class _SearchScreenState extends State<SearchScreen> {
     // As per user request, use the dark card design for the first, light for the second
     final bool isDark = index == 0;
     
-    final Color bgColor = isDark ? const Color(0xFF1C1D21) : Colors.white;
+    final Color bgColor = isDark ? const Color(0xFF1B1B1C) : Colors.white;
     final Color textColor = isDark ? Colors.white : Colors.black;
     final Color subtitleColor = isDark ? const Color(0xFFAAAAAA) : const Color(0xFF888888);
-    final Color iconBoxColor = isDark ? const Color(0xFF2E2E32) : const Color(0xFFEEEEEE);
+    final Color faintCircleColor = isDark ? const Color(0xFF242425) : const Color(0xFFE5E5E5);
+    final Color iconBoxColor = isDark ? const Color(0xFF333333) : const Color(0xFFCDCDCD);
     
     // Choose an icon based on location type
-    IconData iconData = Icons.location_city;
+    IconData iconData = Icons.domain;
     if (location.type == LocationType.lab) iconData = Icons.science;
     else if (location.type == LocationType.faculty) iconData = Icons.person;
 
     return GestureDetector(
       onTap: () => _onLocationSelected(location),
       child: Container(
-        width: 140,
-        padding: const EdgeInsets.all(16),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
              if (!isDark)
                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withOpacity(0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 4)
                ),
           ]
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Align(
-              alignment: Alignment.topRight,
+            Positioned(
+              right: -30,
+              top: -30,
               child: Container(
-                padding: const EdgeInsets.all(8),
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  color: faintCircleColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              right: 16,
+              top: 16,
+              child: Container(
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: iconBoxColor,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(iconData, color: textColor, size: 20),
+                child: Icon(iconData, color: textColor, size: 24),
               ),
             ),
-            const Spacer(),
-            Text(
-              'Nearby',
-              style: TextStyle(
-                color: subtitleColor,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              location.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                height: 1.2,
+            Positioned(
+              left: 16,
+              bottom: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Nearby',
+                    style: TextStyle(
+                      color: subtitleColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    location.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
