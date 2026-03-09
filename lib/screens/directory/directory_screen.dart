@@ -87,7 +87,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                         if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                         } else {
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+                         }
+                      },
                     ),
                   ),
                   const SizedBox(width: 20),
