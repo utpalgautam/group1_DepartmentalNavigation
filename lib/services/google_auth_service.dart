@@ -6,10 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class GoogleAuthService {
   FirebaseAuth get _auth => FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId:
-        '536898116300-7ouh22jpde9s52fkpmbcabni3fbm462l.apps.googleusercontent.com',
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -27,15 +24,14 @@ class GoogleAuthService {
         userCredential = await _auth.signInWithPopup(googleProvider);
       } else {
         // On mobile: use google_sign_in package
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        final GoogleSignInAccount? googleUser =
+            await _googleSignIn.authenticate();
         if (googleUser == null) {
           // User cancelled
           return null;
         }
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth = googleUser.authentication;
         final credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
         userCredential = await _auth.signInWithCredential(credential);

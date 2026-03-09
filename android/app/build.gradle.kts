@@ -11,7 +11,12 @@ plugins {
 android {
     namespace = "com.example.auth_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.1.13356709"
+    // CMake 3.31.0 is required on Apple Silicon (M1/M2) — CMake 3.22.1 uses
+    // darwin-x86_64 toolchain instead of darwin-arm64, causing CXX1429.
+    buildFeatures {
+        prefab = true
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

@@ -103,9 +103,8 @@ class AuthService {
       // if the user cancels or if there is a sign-in failure.
       final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
 
-      // v7.x: .authentication is async — MUST be awaited
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      // v7.x: .authentication is synchronous, remove await
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       // Firebase credential — idToken is sufficient for Firebase auth
       final AuthCredential credential = GoogleAuthProvider.credential(
