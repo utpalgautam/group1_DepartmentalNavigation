@@ -1,0 +1,31 @@
+graphhopper:
+  datareader.file: nitc_fixed.osm.pbf
+  graph.location: graph-cache
+
+  # Required in GH 9.x
+  import.osm.ignored_highways: motorway,motorway_link,trunk,trunk_link
+
+  # Routing profiles using built-in GH custom model files
+  profiles:
+    - name: car
+      custom_model_files: [car.json]
+    - name: bike
+      custom_model_files: [bike.json]
+    - name: foot
+      custom_model_files: [foot.json]
+
+  # Disable CH/LM preprocessing (campus area is small)
+  profiles_ch: []
+  profiles_lm: []
+
+  # Encoded values needed for car/bike/foot routing
+  graph.encoded_values: road_class,road_class_link,road_environment,max_speed,road_access,car_access,car_average_speed,bike_access,bike_average_speed,foot_access,foot_average_speed,bike_priority,roundabout,hike_rating,foot_priority
+
+  # Bounding box for NITC campus area
+  datareader.bbox: 11.320,76.020,11.340,76.050
+
+server:
+  application_context_path: /
+  application_connectors:
+    - type: http
+      port: 8989

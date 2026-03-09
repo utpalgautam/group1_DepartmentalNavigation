@@ -17,16 +17,16 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -49,22 +49,20 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCbeVmvLy-Z33F956ksU1-vup3HQcoudvA',
-    appId: '1:536898116300:web:b4d6f061c933e09ab64069',
-    messagingSenderId: '536898116300',
-    projectId: 'departmentnvs',
-    authDomain: 'departmentnvs.firebaseapp.com',
-    storageBucket: 'departmentnvs.firebasestorage.app',
-    measurementId: 'G-L6LD0LE6MC',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAtl2cbJopo9Uzj5KPLFnV5JgueHGwR9RE',
-    appId: '1:536898116300:android:0c4ac9537bc01e90b64069',
-    messagingSenderId: '536898116300',
-    projectId: 'departmentnvs',
-    storageBucket: 'departmentnvs.firebasestorage.app',
+    apiKey: 'AIzaSyDy8E1gunFSxKoXX2LA4CModpl4Fma7Yd4',
+    appId: '1:816397169014:android:d7b4ed7f1161a40f048a57',
+    messagingSenderId: '816397169014',
+    projectId: 'dept-nav-app',
+    storageBucket: 'dept-nav-app.firebasestorage.app',
   );
 
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBruUSA780FMTD22QYeS_ezEc_SqiYgxrY',
+    appId: '1:816397169014:ios:612017a66b49a966048a57',
+    messagingSenderId: '816397169014',
+    projectId: 'dept-nav-app',
+    storageBucket: 'dept-nav-app.firebasestorage.app',
+    iosBundleId: 'com.nitc.deptNavApp',
+  );
 }

@@ -2,18 +2,26 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
-  final bool obscure;
-  final Widget? suffix;
-  final Widget? prefix;
-  final TextEditingController? controller;
+  final String hintText;
+  final TextEditingController controller;
+  final bool isPassword;
+  final bool isVisible;
+  final VoidCallback? onVisibilityToggle;
+  final TextInputType keyboardType;
+  final String? Function(String?)? validator;
+  final bool enabled;
 
   const CustomTextField({
     super.key,
     required this.label,
-    this.obscure = false,
-    this.suffix,
-    this.prefix,
-    this.controller,
+    required this.hintText,
+    required this.controller,
+    this.isPassword = false,
+    this.isVisible = false,
+    this.onVisibilityToggle,
+    this.keyboardType = TextInputType.text,
+    this.validator,
+    this.enabled = true,
   });
 
   @override
@@ -21,22 +29,66 @@ class CustomTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label is now optional or handled outside if needed, 
-        // but for this design we might want to hide the top label 
-        // if it's not passed, or style it differently.
-        // The design shows labels outside the box.
-        
-        TextField(
-          controller: controller,
-          obscureText: obscure,
+        Text(
+          label,
           style: const TextStyle(
-            color: Colors.black, 
+            color: Color(0xFF888888), // Grey label
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: isPassword && !isVisible,
+          keyboardType: keyboardType,
+          enabled: enabled,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: enabled ? Colors.black : const Color(0xFF999999),
           ),
           decoration: InputDecoration(
-            hintText: label,
-            suffixIcon: suffix,
-            prefixIcon: prefix,
+            hintText: hintText,
+            hintStyle: const TextStyle(
+              color: Color(0xFFB0B0B0),
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: const BorderSide(color: Colors.black12, width: 1),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+            ),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      isVisible ? Icons.visibility_off : Icons.visibility,
+                      color: const Color(0xFF888888),
+                    ),
+                    onPressed: onVisibilityToggle,
+                  )
+                : null,
           ),
+          validator: validator,
         ),
       ],
     );
