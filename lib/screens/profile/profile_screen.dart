@@ -105,12 +105,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.only(left: 16.0),
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: Colors.black,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.pop(context), // Though usually used in a tab bar, providing a back button
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                 if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                 } else {
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+                 }
+              }, // Though usually used in a tab bar, providing a back button
             ),
           ),
         ),
