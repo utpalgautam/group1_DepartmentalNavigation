@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "816397169014",
+    "project_id": "dept-nav-app",
+    "storage_bucket": "dept-nav-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:816397169014:android:d7b4ed7f1161a40f048a57",
+        "android_client_info": {
+          "package_name": "com.nitc.dept_nav_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "816397169014-2p4hbekggerb3dcd0rq1vjiovg48dln1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nitc.dept_nav_app",
+            "certificate_hash": "875e0b74b6e295bfc3c8f87d5cdae20c66fbf25b"
+          }
+        },
+        {
+          "client_id": "816397169014-sfkr3uraovi2nn25iiaeetbknnrppkgf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy8E1gunFSxKoXX2LA4CModpl4Fma7Yd4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "816397169014-sfkr3uraovi2nn25iiaeetbknnrppkgf.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "816397169014-gbee7lcaaigtpn4j7t8nrn5ogr9julms.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nitc.deptNavApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
