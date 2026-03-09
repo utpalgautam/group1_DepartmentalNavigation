@@ -186,12 +186,18 @@ class _SearchScreenState extends State<SearchScreen> {
                 children: [
                   Container(
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.black,
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.black),
-                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                         if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                         } else {
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+                         }
+                      },
                     ),
                   ),
                   const SizedBox(width: 16),
