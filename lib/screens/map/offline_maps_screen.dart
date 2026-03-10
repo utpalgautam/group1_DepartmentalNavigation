@@ -8,6 +8,7 @@ import '../directory/directory_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../home/search_screen.dart';
+import 'explore_map_screen.dart';
 import 'offline_floor_map_screen.dart';
 
 class OfflineMapsScreen extends StatefulWidget {
@@ -223,82 +224,90 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
   }
 
   Widget _buildMainMapCard() {
-    return Container(
-      width: double.infinity,
-      height: 180,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C1D21),
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Stack(
-        children: [
-          // Background circle designs
-          Positioned(
-            right: -60,
-            top: -40,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                color: const Color(0xFF333333).withOpacity(0.5),
-                shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ExploreMapScreen()),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        height: 180,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1D21),
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: Stack(
+          children: [
+            // Background circle designs
+            Positioned(
+              right: -60,
+              top: -40,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF333333).withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
-          Positioned(
-            right: 20,
-            top: 40,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: const BoxDecoration(
-                color: Color(0xFF3B3B3B),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.map,
-                color: Colors.white,
-                size: 40,
+            Positioned(
+              right: 20,
+              top: 40,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF3B3B3B),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.map,
+                  color: Colors.white,
+                  size: 40,
+                ),
               ),
             ),
-          ),
 
-          Padding(
-            padding: const EdgeInsets.all(28.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4A4A4A),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Intractive',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+            Padding(
+              padding: const EdgeInsets.all(28.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4A4A4A),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Interactive',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Whole NITC Map',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Whole NITC Map',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
