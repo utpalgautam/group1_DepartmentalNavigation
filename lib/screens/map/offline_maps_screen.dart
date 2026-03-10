@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
 import '../../models/building_model.dart';
 import '../../services/firestore_service.dart';
+import '../../services/offline_storage_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../directory/directory_screen.dart';
 import '../home/home_screen.dart';
@@ -18,8 +19,61 @@ class OfflineMapsScreen extends StatefulWidget {
 
 class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
+  final OfflineStorageService _offlineStorageService = OfflineStorageService();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  Set<String> _downloadedBuildingIds = {};
+  bool _isLoadingIds = true;
+  Set<String> _downloadingIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDownloadedIds();
+  }
+
+  Future<void> _loadDownloadedIds() async {
+    final ids = await _offlineStorageService.getDownloadedBuildingIds();
+    if (mounted) {
+      setState(() {
+        _downloadedBuildingIds = ids;
+        _isLoadingIds = false;
+      });
+    }
+  }
+
+  Future<void> _downloadMap(String buildingId) async {
+    setState(() {
+      _downloadingIds.add(buildingId);
+    });
+
+    // Simulate map download duration
+    await Future.delayed(const Duration(seconds: 2));
+    await _offlineStorageService.markAsDownloaded(buildingId);
+
+    if (mounted) {
+      setState(() {
+        _downloadingIds.remove(buildingId);
+        _downloadedBuildingIds.add(buildingId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Map downloaded successfully!')),
+      );
+    }
+  }
+
+  Future<void> _deleteMap(String buildingId) async {
+    await _offlineStorageService.removeDownloadedMap(buildingId);
+
+    if (mounted) {
+      setState(() {
+        _downloadedBuildingIds.remove(buildingId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Map deleted successfully!')),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -37,13 +91,17 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
     if (index == 3) return; // already in MAP
 
     if (index == 0) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const HomeScreen()));
     } else if (index == 1) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DirectoryScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const DirectoryScreen()));
     } else if (index == 2) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SearchScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const SearchScreen()));
     } else if (index == 4) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
     }
   }
 
@@ -70,13 +128,17 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
                           onPressed: () {
-                             if (Navigator.canPop(context)) {
-                                Navigator.pop(context);
-                             } else {
-                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-                             }
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            } else {
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const HomeScreen()));
+                            }
                           },
                         ),
                       ),
@@ -144,7 +206,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
               ),
             ),
           ),
-          
+
           // Floating Bottom Nav Bar
           Positioned(
             bottom: 30,
@@ -209,7 +271,8 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4A4A4A),
                     borderRadius: BorderRadius.circular(20),
@@ -244,8 +307,10 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
     return StreamBuilder<List<BuildingModel>>(
       stream: _firestoreService.streamAllBuildings(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.black));
+        if (snapshot.connectionState == ConnectionState.waiting ||
+            _isLoadingIds) {
+          return const Center(
+              child: CircularProgressIndicator(color: Colors.black));
         }
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
@@ -262,19 +327,59 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
           return const Center(child: Text('No buildings found.'));
         }
 
-        return ListView.separated(
-          itemCount: buildings.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
-          itemBuilder: (context, index) {
-            final building = buildings[index];
-            return _buildBuildingCard(building);
-          },
+        final downloadedMaps = buildings
+            .where((b) => _downloadedBuildingIds.contains(b.id))
+            .toList();
+        final availableMaps = buildings
+            .where((b) => !_downloadedBuildingIds.contains(b.id))
+            .toList();
+
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            if (downloadedMaps.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12.0),
+                child: Text(
+                  'Downloaded Maps',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              ...downloadedMaps.map((b) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: _buildBuildingCard(b, isDownloaded: true),
+                  )),
+              if (availableMaps.isNotEmpty) const SizedBox(height: 16),
+            ],
+            if (availableMaps.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12.0),
+                child: Text(
+                  'Available Maps',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              ...availableMaps.map((b) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: _buildBuildingCard(b, isDownloaded: false),
+                  )),
+            ],
+          ],
         );
       },
     );
   }
 
-  Widget _buildBuildingCard(BuildingModel building) {
+  Widget _buildBuildingCard(BuildingModel building,
+      {required bool isDownloaded}) {
     final imageBytes = building.imageBytes;
 
     return Container(
@@ -304,8 +409,8 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
               Container(
                 width: 80,
                 height: 80,
-                margin: const EdgeInsets.only(
-                    left: 12.0, top: 12.0, bottom: 12.0),
+                margin:
+                    const EdgeInsets.only(left: 12.0, top: 12.0, bottom: 12.0),
                 decoration: BoxDecoration(
                   color: const Color(0xFF333333),
                   borderRadius: BorderRadius.circular(18),
@@ -329,7 +434,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
               ),
 
               const SizedBox(width: 16),
-              
+
               // Building Details
               Expanded(
                 child: Padding(
@@ -350,7 +455,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                         '${building.latitude.toStringAsFixed(4)} N, ${building.longitude.toStringAsFixed(4)} E',
+                        '${building.latitude.toStringAsFixed(4)} N, ${building.longitude.toStringAsFixed(4)} E',
                         style: const TextStyle(
                           color: Color(0xFFAAAAAA),
                           fontSize: 12,
@@ -361,7 +466,8 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.layers, color: Colors.white, size: 16),
+                          const Icon(Icons.layers,
+                              color: Colors.white, size: 16),
                           const SizedBox(width: 6),
                           Text(
                             '${building.totalFloors} Floors',
@@ -377,34 +483,95 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              
-              // Elevated Button "View"
+              const SizedBox(width: 4),
+
+              // Elevated Button
               Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => OfflineFloorMapScreen(building: building),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF333333), // grey button fill
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: const Text(
-                    'View',
-                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-                  ),
-                ),
+                padding: const EdgeInsets.only(right: 12.0),
+                child: _downloadingIds.contains(building.id)
+                    ? const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
+                        ),
+                      )
+                    : isDownloaded
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: () => _deleteMap(building.id),
+                                icon: const Icon(Icons.delete_outline,
+                                    color: Colors.redAccent, size: 20),
+                                padding: const EdgeInsets.all(4),
+                                constraints: const BoxConstraints(
+                                    minWidth: 32, minHeight: 32),
+                              ),
+                              const SizedBox(width: 4),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => OfflineFloorMapScreen(
+                                          building: building),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(
+                                      0xFF333333), // grey button fill
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
+                                ),
+                                child: const Text(
+                                  'View',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          )
+                        : ElevatedButton(
+                            onPressed: () => _downloadMap(building.id),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.download,
+                                  size: 16,
+                                  color: Colors.black,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Download',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                      color: Colors.black),
+                                ),
+                              ],
+                            ),
+                          ),
               ),
             ],
           ),

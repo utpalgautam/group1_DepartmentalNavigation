@@ -53,9 +53,9 @@ class _ExploreMapScreenState extends State<ExploreMapScreen> {
         ),
         styleString: MapStyle.osm,
         myLocationEnabled: _isMapReady,
-        myLocationRenderMode: _isMapReady ? MyLocationRenderMode.COMPASS : MyLocationRenderMode.NORMAL,
+        myLocationRenderMode: _isMapReady ? MyLocationRenderMode.compass : MyLocationRenderMode.normal,
         compassEnabled: true,
-        attributionButtonPosition: AttributionButtonPosition.BottomLeft,
+        attributionButtonPosition: AttributionButtonPosition.bottomLeft,
       ),
     );
   }

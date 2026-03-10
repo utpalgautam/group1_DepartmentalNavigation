@@ -63,9 +63,9 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
             ),
             styleString: MapStyle.osm,
             myLocationEnabled: _isMapReady, // Only enable if map is ready, and we can turn it off
-            myLocationRenderMode: _isMapReady ? MyLocationRenderMode.COMPASS : MyLocationRenderMode.NORMAL,
+            myLocationRenderMode: _isMapReady ? MyLocationRenderMode.compass : MyLocationRenderMode.normal,
             compassEnabled: true,
-            attributionButtonPosition: AttributionButtonPosition.BottomLeft,
+            attributionButtonPosition: AttributionButtonPosition.bottomLeft,
           ),
           
           if (!navProvider.isNavigating)
