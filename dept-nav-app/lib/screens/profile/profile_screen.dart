@@ -13,6 +13,7 @@ import '../map/offline_maps_screen.dart';
 import 'change_password_screen.dart';
 import 'recent_searches_screen.dart';
 import 'edit_details_screen.dart';
+import '../../main.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -188,7 +189,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   await auth.logout();
                   if (mounted) {
-                     Navigator.of(context).popUntil((route) => route.isFirst);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const AuthWrapper()), // Use the wrapper to determine next screen
+                      (route) => false,
+                    );
                   }
                 },
                 child: const Text(
