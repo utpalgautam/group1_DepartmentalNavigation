@@ -1,0 +1,3 @@
+gh.log
+*.osm
+!nitc_fixed.osm.pbf
