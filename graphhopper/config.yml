@@ -21,8 +21,8 @@ graphhopper:
   # Encoded values needed for car/bike/foot routing
   graph.encoded_values: road_class,road_class_link,road_environment,max_speed,road_access,car_access,car_average_speed,bike_access,bike_average_speed,foot_access,foot_average_speed,bike_priority,roundabout,hike_rating,foot_priority
 
-  # Bounding box for NITC campus area
-  datareader.bbox: 11.320,76.020,11.340,76.050
+  # Bounding box for NITC campus area (Expanded for full coordinate coverage)
+  datareader.bbox: 11.265,75.914,11.336,76.050
 
 server:
   application_context_path: /
