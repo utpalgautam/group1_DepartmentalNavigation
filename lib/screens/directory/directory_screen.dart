@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../core/constants/colors.dart';
 import '../../models/faculty_model.dart';
@@ -522,7 +521,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               title: hall.name,
               subtitle: hall.typeString,
               department: 'Capacity: ${hall.capacity}',
-              email: hall.contactPerson ?? '',
+              contactLabel: '',
+              contactValue: '',
               locationId: hall.locationId,
               fallbackIcon: Icons.meeting_room,
             );
@@ -566,7 +566,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               title: lab.name,
               subtitle: 'Capacity: ${lab.capacity}',
               department: lab.department,
-              email: lab.inchargeEmail ?? '',
+              contactLabel: 'Lab Incharge',
+              contactValue: lab.incharge ?? '',
               locationId: lab.locationId,
               fallbackIcon: Icons.science,
             );
@@ -580,7 +581,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     required String title,
     required String subtitle,
     required String department,
-    required String email,
+    required String contactLabel,
+    required String contactValue,
     required String locationId,
     String? photoUrl,
     IconData fallbackIcon = Icons.person,
@@ -618,7 +620,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 24.0),
+                    horizontal: 20.0, vertical: 16.0),
                 child: Column(
                   children: [
                     Row(
@@ -678,11 +680,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                       height: 1.3,
                                     ),
                                   ),
-                                if (email.isNotEmpty)
+                                if (contactValue.isNotEmpty)
                                   Text(
-                                    email.contains('Email')
-                                        ? email
-                                        : 'Email : $email',
+                                    '$contactLabel : $contactValue',
                                     style: const TextStyle(
                                       color: Color(0xFF909090),
                                       fontSize: 14,
@@ -695,7 +695,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
                     // Footer Pills
                     Row(
                       children: [
