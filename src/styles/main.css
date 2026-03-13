@@ -832,14 +832,16 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Prevent page scroll */
+  overflow: hidden;
+  /* Prevent page scroll */
 }
 
 .bd-header-container {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  margin-bottom: 1rem; /* Reduced */
+  margin-bottom: 1rem;
+  /* Reduced */
   width: 100%;
   padding-right: 0.5rem;
   flex-shrink: 0;
@@ -953,7 +955,8 @@ body {
   grid-template-columns: 1fr 360px;
   gap: 1.5rem;
   flex: 1;
-  min-height: 0; /* Forces children to respect flex containment */
+  min-height: 0;
+  /* Forces children to respect flex containment */
   height: 100%;
 }
 
@@ -961,7 +964,8 @@ body {
 .bd-left {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* Slightly reduced */
+  gap: 0.75rem;
+  /* Slightly reduced */
   width: 100%;
   min-height: 0;
 }
@@ -970,7 +974,8 @@ body {
   position: relative;
   background: #ffffff;
   border: 1.5px solid #e2e6ec;
-  border-radius: 999px; /* Pill */
+  border-radius: 999px;
+  /* Pill */
   padding: 0.65rem 1.25rem;
 }
 
@@ -1003,13 +1008,15 @@ body {
 /* SVG Viewer */
 .bd-svgviewer {
   background: #ffffff;
-  border: 1.5px dashed #d1d5db; /* Dashed border like reference */
+  border: 1.5px dashed #d1d5db;
+  /* Dashed border like reference */
   border-radius: 24px;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem; /* Reduced padding to recover space */
+  padding: 1.5rem;
+  /* Reduced padding to recover space */
   overflow: hidden;
   margin-bottom: 0;
   min-height: 0;
@@ -1045,7 +1052,8 @@ body {
 
 /* ── Right Panel ───────────────────────────── */
 .bd-right {
-  background: #f8fafc; /* Lighter lavender/gray */
+  background: #f8fafc;
+  /* Lighter lavender/gray */
   border-radius: 24px;
   border: 1.5px solid #e8edf5;
   overflow: hidden;
@@ -1061,7 +1069,8 @@ body {
   background: transparent;
   border: 1.5px solid #e2e6ec;
   border-radius: 999px;
-  margin: 1rem 1rem 0.5rem; /* Slightly reduced margin */
+  margin: 1rem 1rem 0.5rem;
+  /* Slightly reduced margin */
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -1087,13 +1096,16 @@ body {
 
 /* Form inside right panel */
 .bd-form {
-  padding: 1rem; /* Reduced padding */
+  padding: 1rem;
+  /* Reduced padding */
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* Tighter gaps */
+  gap: 0.75rem;
+  /* Tighter gaps */
   flex: 1;
   min-height: 0;
-  overflow-y: auto; /* Just in case, but target is no scroll */
+  overflow-y: auto;
+  /* Just in case, but target is no scroll */
 }
 
 .bd-form__row {
@@ -1126,7 +1138,8 @@ body {
   background: #ffffff;
   border: 1.5px solid #e2e6ec;
   border-radius: 8px;
-  padding: 0.45rem 0.75rem; /* More compact */
+  padding: 0.45rem 0.75rem;
+  /* More compact */
   font-size: 0.85rem;
   font-family: inherit;
   color: #111;
@@ -1176,7 +1189,8 @@ body {
 /* Submit button */
 .bd-form__submit {
   width: 100%;
-  padding: 0.75rem 0; /* More compact */
+  padding: 0.75rem 0;
+  /* More compact */
   background: #111;
   color: #ffffff;
   border: none;
@@ -1186,7 +1200,8 @@ body {
   font-family: inherit;
   cursor: pointer;
   transition: transform 0.1s, opacity 0.2s;
-  margin-top: 0.5rem; /* Fixed top margin instead of auto */
+  margin-top: 0.5rem;
+  /* Fixed top margin instead of auto */
   flex-shrink: 0;
 }
 
@@ -1646,13 +1661,33 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .fac-title {
   font-size: 2rem;
   font-weight: 600;
   letter-spacing: -0.5px;
+  color: #111;
+}
+
+.fac-back-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f0ebf8;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #111;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.fac-back-btn:hover {
+  background: #e5def5;
 }
 
 .fac-header-actions {
@@ -1774,13 +1809,13 @@ body {
 .fac-form-card {
   background: #f8f9fc;
   border: 1px solid #dcdfe4;
-  border-radius: 20px;
-  padding: 2.5rem 3rem;
+  border-radius: 30px;
+  padding: 2rem 3rem;
   display: grid;
-  grid-template-columns: 1.2fr 2fr;
-  gap: 3rem;
+  grid-template-columns: 1fr 2fr;
+  gap: 2.5rem;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 850px) {
@@ -1801,8 +1836,8 @@ body {
 }
 
 .fac-upload-circle {
-  width: 280px;
-  height: 280px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
   border: 1.5px dashed #b1bbcb;
   display: flex;
@@ -2023,12 +2058,12 @@ body {
   background: #f6f6f8;
   border: 1px solid #e1e4e8;
   border-radius: 20px;
-  padding: 2.5rem 3rem;
+  padding: 1rem 2rem;
   width: 100%;
 }
 
 .hl-form-inner-box {
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 16px;
   width: 100%;
 }
@@ -2072,7 +2107,7 @@ body {
   border-radius: 999px;
   overflow: hidden;
   border: 1px solid #dcdfe4;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   padding: 0;
 }
 
@@ -2103,7 +2138,7 @@ body {
 .hl-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .hl-form-group {
@@ -2121,7 +2156,7 @@ body {
 
 .hl-input-pill {
   width: 100%;
-  padding: 0.8rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   border: 1px solid #b1bbcb;
   border-radius: 999px;
   font-size: 0.9rem;
@@ -2143,7 +2178,7 @@ body {
 .hl-upload-zone {
   width: 100%;
   height: 100%;
-  min-height: 380px;
+  min-height: 280px;
   border: 1.5px dashed #b1bbcb;
   border-radius: 20px;
   display: flex;
@@ -2192,7 +2227,7 @@ body {
 .hl-form-actions {
   display: flex;
   gap: 1.5rem;
-  margin-top: 2.5rem;
+  margin-top: 1.5rem;
 }
 
 .hl-btn-save {
@@ -2201,7 +2236,7 @@ body {
   color: white;
   border: none;
   border-radius: 999px;
-  padding: 1.2rem;
+  padding: 0.9rem;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -2219,7 +2254,7 @@ body {
   color: #111;
   border: 1px solid #dcdfe4;
   border-radius: 999px;
-  padding: 1.2rem;
+  padding: 0.9rem;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -2269,13 +2304,13 @@ body {
 .fac-form-fields {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.15rem;
 }
 
 .fac-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .fac-label {
@@ -2287,7 +2322,7 @@ body {
 .fac-input,
 .fac-select {
   width: 100%;
-  padding: 0.8rem 1.2rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 999px;
   border: 1.2px solid #b1bbcb;
   background: transparent;
@@ -2316,17 +2351,17 @@ body {
 /* Action Footer */
 .fac-form-footer {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
 }
 
 .fac-submit-btn {
   background: #1c1c1e;
   color: #fff;
   font-weight: 600;
-  font-size: 1.05rem;
-  border-radius: 16px;
-  padding: 1.25rem;
+  font-size: 1.1rem;
+  border-radius: 999px;
+  padding: 1.1rem;
   border: none;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -2341,9 +2376,9 @@ body {
   background: #f8f9fc;
   color: #111;
   font-weight: 600;
-  font-size: 1.05rem;
-  border-radius: 16px;
-  padding: 1.25rem;
+  font-size: 1.1rem;
+  border-radius: 999px;
+  padding: 1.1rem;
   border: 1px solid #b1bbcb;
   cursor: pointer;
   width: 100%;
@@ -3671,4 +3706,3 @@ body {
   border-radius: 8px;
   margin-bottom: 2rem;
 }
-

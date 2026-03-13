@@ -108,12 +108,20 @@ const UserManagementPage = () => {
   };
 
   if (viewState === 'add' || viewState === 'edit') {
+    const pageTitle = viewState === 'add' ? 'Add New User' : 'Edit User';
     return (
-      <UserForm
-        user={selectedUser}
-        onSave={handleSaveUser}
-        onCancel={handleCancelForm}
-      />
+      <div className="user-page">
+        <Header
+          title={pageTitle}
+          searchDisabled={true}
+          onBack={handleCancelForm}
+        />
+        <UserForm
+          user={selectedUser}
+          onSave={handleSaveUser}
+          onCancel={handleCancelForm}
+        />
+      </div>
     );
   }
 

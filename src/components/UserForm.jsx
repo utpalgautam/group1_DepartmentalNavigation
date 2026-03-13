@@ -53,26 +53,6 @@ const UserForm = ({ user, onSave, onCancel }) => {
 
     return (
         <div className="user-form-page">
-            {/* Explicit header matching mockup closely */}
-            <div className="user-form-header-row">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <button type="button" className="user-form-back-btn" onClick={onCancel}>
-                        <FaArrowLeft size={16} />
-                    </button>
-                    <h1 className="user-form-title">{isEditMode ? 'Edit User' : 'Add New User'}</h1>
-                </div>
-                <div className="user-form-search-dummy">
-                    <div className="user-form-search-box">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '1rem' }}>
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <input type="text" placeholder="Search..." disabled />
-                    </div>
-                    <div className="user-form-avatar-dummy"></div>
-                </div>
-            </div>
-
             <div className="user-form-container">
                 <form id="userForm" onSubmit={handleSubmit} className="user-form-content">
                     {error && <div className="user-form-error">{error}</div>}

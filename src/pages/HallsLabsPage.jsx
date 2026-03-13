@@ -129,12 +129,11 @@ const HallsLabsPage = () => {
 
     return (
       <div>
-        <Header title={pageTitle} searchDisabled={true} />
-        <div className="hl-header-row" style={{ marginBottom: '1.5rem', justifyContent: 'flex-start' }}>
-          <button type="button" className="hl-back-btn" onClick={handleCancel}>
-            <FaArrowLeft size={16} />
-          </button>
-        </div>
+        <Header
+          title={pageTitle}
+          searchDisabled={true}
+          onBack={handleCancel}
+        />
 
         <HallsLabsForm
           item={selectedItem}

@@ -1,10 +1,17 @@
 // src/components/Header.jsx
 import { FaSearch } from 'react-icons/fa';
 
-const Header = ({ title, searchTerm, onSearchChange, searchDisabled = false }) => {
+const Header = ({ title, searchTerm, onSearchChange, searchDisabled = false, onBack }) => {
   return (
     <div className="db-header">
-      <h1 className="db-title">{title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {onBack && (
+          <button className="fac-back-btn" onClick={onBack}>
+            ←
+          </button>
+        )}
+        <h1 className="db-title">{title}</h1>
+      </div>
       <div className="db-header-right">
         <div className="db-search-bar">
           <FaSearch className="db-search-icon" />

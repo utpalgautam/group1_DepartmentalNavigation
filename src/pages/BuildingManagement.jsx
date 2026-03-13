@@ -127,12 +127,20 @@ const BuildingManagement = () => {
   }
 
   if (viewState === 'add' || viewState === 'edit') {
+    const pageTitle = viewState === 'add' ? 'Add Buildings' : 'Edit Buildings';
     return (
-      <BuildingForm
-        building={selectedBuilding}
-        onSave={handleSaveBuilding}
-        onCancel={handleCancel}
-      />
+      <div className="bf-page">
+        <Header
+          title={pageTitle}
+          searchDisabled={true}
+          onBack={handleCancel}
+        />
+        <BuildingForm
+          building={selectedBuilding}
+          onSave={handleSaveBuilding}
+          onCancel={handleCancel}
+        />
+      </div>
     );
   }
 

@@ -201,28 +201,6 @@ const BuildingForm = ({ building, onSave, onCancel }) => {
     return (
         <div className="bf-page">
             {/* Dynamic Header */}
-            <div className="bf-topbar">
-                <div className="bf-topbar-left">
-                    <button className="bf-back-btn" onClick={onCancel} title="Cancel and go back">
-                        <FaArrowLeft size={14} />
-                    </button>
-                    <h1 className="bf-page-title">{isEditing ? 'Edit Buildings' : 'Add Buildings'}</h1>
-                </div>
-
-                <div className="bf-topbar-right">
-                    <div className="buildings-search-wrapper">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="buildings-search-icon" style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)' }}>
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <input className="buildings-search-input" style={{ paddingLeft: '2.8rem' }} placeholder="Search..." />
-                    </div>
-                    <div className="buildings-avatar">
-                        <div className="buildings-avatar-circle">AR</div>
-                    </div>
-                </div>
-            </div>
-
             <div className="bf-form-container">
                 {error && <div className="bf-alert bf-alert-error">{error}</div>}
 

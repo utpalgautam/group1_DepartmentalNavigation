@@ -87,12 +87,8 @@ const FacultyManagement = () => {
         <Header
           title={viewState === 'add' ? 'Add New faculty' : 'Edit faculty'}
           searchDisabled={true}
+          onBack={() => { setViewState('list'); setSelectedFaculty(null); }}
         />
-        <div className="fac-header-row" style={{ marginBottom: '1.5rem', justifyContent: 'flex-start' }}>
-          <button className="bf-back-btn" onClick={() => { setViewState('list'); setSelectedFaculty(null); }}>
-            ←
-          </button>
-        </div>
         <FacultyForm
           faculty={selectedFaculty}
           buildings={buildings}
