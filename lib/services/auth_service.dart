@@ -173,13 +173,25 @@ class AuthService {
     }
   }
 
-  Future<void> updatePassword(String newPassword) async {
+  Future<void> updatePassword({required String oldPassword, required String newPassword}) async {
     final user = _auth.currentUser;
     if (user == null) throw 'User not authenticated.';
+    if (user.email == null) throw 'Unable to verify current password. Email not found.';
 
     try {
+      // 1. Re-authenticate to ensure old password is correct
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: oldPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // 2. Update to new password
       await user.updatePassword(newPassword);
     } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw 'Incorrect current password.';
+      }
       if (e.code == 'requires-recent-login') {
         throw 'For security reasons, please log out and log back in to change your password.';
       }

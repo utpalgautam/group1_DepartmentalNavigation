@@ -44,18 +44,24 @@ class _ExploreMapScreenState extends State<ExploreMapScreen> {
           ),
         ),
       ),
-      body: MaplibreMap(
-        onMapCreated: _onMapCreated,
-        onStyleLoadedCallback: _onStyleLoaded,
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(11.319972, 75.932639),
-          zoom: 16.5,
-        ),
-        styleString: MapStyle.osm,
-        myLocationEnabled: _isMapReady,
-        myLocationRenderMode: _isMapReady ? MyLocationRenderMode.COMPASS : MyLocationRenderMode.NORMAL,
-        compassEnabled: true,
-        attributionButtonPosition: AttributionButtonPosition.BottomLeft,
+      body: Stack(
+        children: [
+          MaplibreMap(
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoaded,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(11.319972, 75.932639),
+              zoom: 16.5,
+            ),
+            myLocationEnabled: true,
+            myLocationTrackingMode: MyLocationTrackingMode.none,
+            myLocationRenderMode: _isMapReady ? MyLocationRenderMode.compass : MyLocationRenderMode.normal,
+            compassEnabled: true,
+            attributionButtonPosition: AttributionButtonPosition.bottomLeft,
+            styleString: 'https://tiles.stadiamaps.com/styles/alidade_smooth.json',
+            minMaxZoomPreference: const MinMaxZoomPreference(14.0, 20.0),
+          ),
+        ],
       ),
     );
   }

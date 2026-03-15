@@ -13,6 +13,8 @@ import '../map/offline_maps_screen.dart';
 import 'change_password_screen.dart';
 import 'recent_searches_screen.dart';
 import 'edit_details_screen.dart';
+import '../../main.dart';
+import '../../providers/security_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -105,18 +107,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.only(left: 16.0),
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.black,
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                 if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                 } else {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-                 }
-              }, // Though usually used in a tab bar, providing a back button
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.pop(context), // Though usually used in a tab bar, providing a back button
             ),
           ),
         ),
@@ -177,7 +173,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: _buildListTile('Changed Password'),
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFEEEEEE)),
-                _buildListTile('PIN Lock'),
+                Consumer<SecurityProvider>(
+                  builder: (context, security, child) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'App Lock (Device Lock)',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Switch(
+                            value: security.isDeviceLockEnabled,
+                            activeColor: AppColors.primary,
+                            onChanged: (value) async {
+                              if (value) {
+                                final success = await security.authenticate();
+                                if (success) {
+                                  security.setDeviceLockEnabled(true);
+                                }
+                              } else {
+                                final success = await security.authenticate();
+                                if (success) {
+                                  security.setDeviceLockEnabled(false);
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ]),
               const SizedBox(height: 24),
               
@@ -194,7 +226,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   await auth.logout();
                   if (mounted) {
-                     Navigator.of(context).popUntil((route) => route.isFirst);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const AuthWrapper()), // Use the wrapper to determine next screen
+                      (route) => false,
+                    );
                   }
                 },
                 child: const Text(

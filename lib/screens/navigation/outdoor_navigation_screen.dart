@@ -63,10 +63,10 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
               zoom: AppConstants.defaultMapZoom,
             ),
             styleString: MapStyle.osm,
-            myLocationEnabled: _isMapReady && !navProvider.isNavigating, 
-            myLocationRenderMode: MyLocationRenderMode.NORMAL,
+            myLocationEnabled: _isMapReady && !navProvider.isNavigating,
+            myLocationRenderMode: _isMapReady ? MyLocationRenderMode.compass : MyLocationRenderMode.normal,
             compassEnabled: true,
-            attributionButtonPosition: AttributionButtonPosition.BottomLeft,
+            attributionButtonPosition: AttributionButtonPosition.bottomLeft,
           ),
           
           if (!navProvider.isNavigating)
