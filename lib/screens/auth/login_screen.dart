@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart' as app_auth;
 import '../../widgets/custom_text_field.dart';
@@ -24,6 +25,28 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bool remember = prefs.getBool('remember_me') ?? false;
+      if (remember) {
+        setState(() {
+          _rememberMe = true;
+          _emailCtrl.text = prefs.getString('saved_email') ?? '';
+          _passwordCtrl.text = prefs.getString('saved_password') ?? '';
+        });
+      }
+    } catch (_) {
+      // Ignore errors loading preferences
+    }
+  }
+
+  @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
@@ -41,6 +64,20 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     if (!mounted) return;
     if (ok) {
+      // Save or clear Remember Me preferences
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (_rememberMe) {
+          await prefs.setBool('remember_me', true);
+          await prefs.setString('saved_email', _emailCtrl.text.trim());
+          await prefs.setString('saved_password', _passwordCtrl.text);
+        } else {
+          await prefs.setBool('remember_me', false);
+          await prefs.remove('saved_email');
+          await prefs.remove('saved_password');
+        }
+      } catch (_) {}
+
       // Clear the entire nav stack (OnboardingScreen → LoginScreen) and go Home
       navigator.pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeScreen()),

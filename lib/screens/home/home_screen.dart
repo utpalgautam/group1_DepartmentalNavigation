@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart' as app_auth;
-import '../navigation/outdoor_navigation_screen.dart';
 import '../profile/profile_screen.dart';
 import 'search_screen.dart';
 import '../directory/directory_screen.dart';
@@ -22,17 +21,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavItemTapped(int index) {
     if (index == 0) return;
     if (index == 1) {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (_) => const DirectoryScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const DirectoryScreen()));
     } else if (index == 2) {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (_) => const SearchScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const SearchScreen()));
     } else if (index == 3) {
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (_) => const OfflineMapsScreen()));
     } else if (index == 4) {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (_) => const ProfileScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
     }
   }
 
@@ -67,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // ── 2. White card – overlaps image, rounded top ───────────────
           Positioned(
-            top: heroHeight - cardOverlap+10,
+            top: heroHeight - cardOverlap + 10,
             left: 0,
             right: 0,
             bottom: 0,
@@ -196,7 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       image: _getAvatarImage(profileImageUrl),
                     ),
                     child: profileImageUrl == null || profileImageUrl.isEmpty
-                        ? const Icon(Icons.person, color: Colors.white, size: 28)
+                        ? const Icon(Icons.person,
+                            color: Colors.white, size: 28)
                         : null,
                   ),
                 ),
@@ -231,8 +231,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── Search bar ────────────────────────────────────────────────────────────
   Widget _buildSearchBar() {
     return GestureDetector(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const SearchScreen())),
+      onTap: () => Navigator.push(
+          context, MaterialPageRoute(builder: (_) => const SearchScreen())),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -270,8 +270,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── Explore NITC Map card ─────────────────────────────────────────────────
   Widget _buildMapCard() {
     return GestureDetector(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const ExploreMapScreen())),
+      onTap: () => Navigator.push(
+          context, MaterialPageRoute(builder: (_) => const ExploreMapScreen())),
       child: Container(
         width: double.infinity,
         height: 180,
@@ -312,14 +312,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFF3A3A3A),
                       borderRadius: BorderRadius.circular(20),
@@ -341,8 +340,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 6),
                   const Text(
                     'Find your way around campus locations.\ninstantly.',
-                    style:
-                        TextStyle(color: Color(0xFFAAAAAA), fontSize: 12, height: 1.5),
+                    style: TextStyle(
+                        color: Color(0xFFAAAAAA), fontSize: 12, height: 1.5),
                   ),
                 ],
               ),
@@ -403,8 +402,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCircle(
-      {required IconData icon, required VoidCallback onTap}) {
+  Widget _buildCircle({required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
