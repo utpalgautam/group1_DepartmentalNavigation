@@ -26,6 +26,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _selectedSpeed = 'Normal';
+  String _selectedDistanceMetric = 'Kilometers';
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
@@ -227,16 +228,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.straighten,
                   iconColor: Colors.green[600]!,
                   iconBgColor: Colors.green[50]!,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Meters/KM',
-                        style: TextStyle(color: Colors.blue[600], fontSize: 13, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.expand_more, color: Colors.grey, size: 20),
-                    ],
+                  trailing: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedDistanceMetric,
+                      icon: const Icon(Icons.expand_more, color: Colors.grey, size: 20),
+                      style: TextStyle(color: Colors.blue[600], fontSize: 13, fontWeight: FontWeight.w500),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedDistanceMetric = newValue;
+                          });
+                        }
+                      },
+                      items: <String>['Meters', 'Kilometers', 'Feet']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
                 const Divider(height: 1, indent: 64, endIndent: 0, color: Color(0xFFF0F0F0)),
