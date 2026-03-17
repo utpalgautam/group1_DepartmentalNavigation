@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart' as app_auth;
+import '../navigation/outdoor_navigation_screen.dart';
 import '../profile/profile_screen.dart';
 import 'search_screen.dart';
 import '../directory/directory_screen.dart';

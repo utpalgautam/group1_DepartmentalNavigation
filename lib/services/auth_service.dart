@@ -207,14 +207,20 @@ class AuthService {
 
   // ── Guest / Anonymous Sign-In ─────────────────────────────────────────────
   Future<UserModel> signInAsGuest() async {
-    return UserModel(
-      uid: 'guest_${DateTime.now().millisecondsSinceEpoch}',
-      email: '',
-      name: 'Guest',
-      userType: UserType.student,
-      createdAt: DateTime.now(),
-      isGuest: true,
-    );
+    try {
+      final UserCredential cred = await _auth.signInAnonymously();
+      final User user = cred.user!;
+      return UserModel(
+        uid: user.uid,
+        email: '',
+        name: 'Guest',
+        userType: UserType.student,
+        createdAt: DateTime.now(),
+        isGuest: true,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw _authErrorMessage(e.code);
+    }
   }
 
   // ── Sign out ──────────────────────────────────────────────────────────────

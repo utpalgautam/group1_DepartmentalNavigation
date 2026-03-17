@@ -94,11 +94,11 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onLocationSelected(LocationModel location) async {
     // Navigate or pass data back
     final auth = context.read<app_auth.AuthProvider>();
-    if (auth.currentUser != null && !auth.currentUser!.isGuest) {
+    if (auth.currentUser != null) {
       await _firestoreService.addRecentSearch(
           auth.currentUser!.uid, location.id);
+      await _firestoreService.incrementSearchCount(location.id);
     }
-    await _firestoreService.incrementSearchCount(location.id);
 
     if (!mounted) return;
 
