@@ -364,9 +364,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: _pickImage,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const EditDetailsScreen(),
+              ),
+            );
+          },
           child: Text(
-            'Edit Photo',
+            'Edit Details',
             style: TextStyle(
               fontSize: 14,
               color: Colors.blue[600],
