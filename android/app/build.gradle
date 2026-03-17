@@ -45,3 +45,40 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    constraints {
+        implementation("androidx.core:core-ktx:1.13.1") {
+            because("Avoid requiring AGP 8.9.1+")
+        }
+        implementation("androidx.core:core:1.13.1") {
+            because("Avoid requiring AGP 8.9.1+")
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force "androidx.core:core-ktx:1.13.1"
+        force "androidx.core:core:1.13.1"
+    }
+}
+
+// Automatically establish adb reverse port forwarding for GraphHopper connection on physical devices
+gradle.taskGraph.whenReady {
+    def adbPath = android.adbExecutable.absolutePath
+    def command = [adbPath, "reverse", "tcp:8989", "tcp:8989"]
+    try {
+        println "Executing $command to forward port 8989 for GraphHopper..."
+        def process = new ProcessBuilder(command).start()
+        process.waitFor()
+        if (process.exitValue() == 0) {
+            println "Successfully forwarded port 8989!"
+        } else {
+            println "Failed to forward port 8989. Exit code: ${process.exitValue()}"
+            println "Error: ${process.err.text}"
+        }
+    } catch (Exception e) {
+        println "Exception executing adb reverse: ${e.message}"
+    }
+}

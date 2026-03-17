@@ -11,7 +11,7 @@ class OfflineStorageService {
 
   Future<void> markAsDownloaded(String buildingId) async {
     final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_downloadedMapsKey) ?? [];
+    final list = prefs.getStringList(_downloadedMapsKey)?.toList() ?? [];
     if (!list.contains(buildingId)) {
       list.add(buildingId);
       await prefs.setStringList(_downloadedMapsKey, list);
@@ -20,7 +20,7 @@ class OfflineStorageService {
 
   Future<void> removeDownloadedMap(String buildingId) async {
     final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_downloadedMapsKey) ?? [];
+    final list = prefs.getStringList(_downloadedMapsKey)?.toList() ?? [];
     if (list.contains(buildingId)) {
       list.remove(buildingId);
       await prefs.setStringList(_downloadedMapsKey, list);

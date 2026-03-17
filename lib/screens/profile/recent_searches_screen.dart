@@ -88,6 +88,26 @@ class _RecentSearchesScreenState extends State<RecentSearchesScreen> {
   }
 
   Future<void> _clearAll() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All'),
+        content: const Text('Are you sure you want to clear all recent searches?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     final auth = context.read<app_auth.AuthProvider>();
     final user = auth.currentUser;
     if (user != null) {

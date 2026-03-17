@@ -113,98 +113,113 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
       body: Stack(
         children: [
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-
-                  // --- Header (Back btn & Title) ---
-                  Row(
-                    children: [
-                      Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.black,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon:
-                              const Icon(Icons.arrow_back, color: Colors.white),
-                          onPressed: () {
-                            if (Navigator.canPop(context)) {
-                              Navigator.pop(context);
-                            } else {
-                              Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const HomeScreen()));
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      const Text(
-                        'Offline Maps',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // --- Main Map Card ---
-                  _buildMainMapCard(),
-                  const SizedBox(height: 24),
-
-                  // --- Search Bar ---
-                  Container(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF2F2F2),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.black, width: 1.5),
-                    ),
-                    child: Row(
+            bottom: false,
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Icon(Icons.search, color: Color(0xFF666666)),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: _onSearchChanged,
-                            decoration: const InputDecoration(
-                              hintText: 'Search Faculty cabins...',
-                              hintStyle: TextStyle(
-                                color: Color(0xFFAAAAAA),
-                                fontSize: 15,
+                        const SizedBox(height: 20),
+
+                        // --- Header (Back btn & Title) ---
+                        Row(
+                          children: [
+                            Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.circle,
                               ),
-                              border: InputBorder.none,
-                              isDense: true,
+                              child: IconButton(
+                                icon:
+                                    const Icon(Icons.arrow_back, color: Colors.white),
+                                onPressed: () {
+                                  if (Navigator.canPop(context)) {
+                                    Navigator.pop(context);
+                                  } else {
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (_) => const HomeScreen()));
+                                  }
+                                },
+                              ),
                             ),
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 15,
+                            const SizedBox(width: 24),
+                            const Text(
+                              'Offline Maps',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
                             ),
-                          ),
+                          ],
                         ),
+                        const SizedBox(height: 24),
+
+                        // --- Main Map Card ---
+                        _buildMainMapCard(),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                ),
 
-                  // --- List Body ---
-                  Expanded(
-                    child: _buildBuildingsList(),
+                // --- Search Bar ---
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickySearchBarDelegate(
+                    child: Container(
+                      color: AppColors.backgroundLight,
+                      padding: const EdgeInsets.only(bottom: 24.0, left: 24.0, right: 24.0),
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F2F2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.black, width: 1.5),
+                        ),
+                        child: Row(
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Icon(Icons.search, color: Color(0xFF666666)),
+                            ),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                onChanged: _onSearchChanged,
+                                decoration: const InputDecoration(
+                                  hintText: 'Search buildings...',
+                                  hintStyle: TextStyle(
+                                    color: Color(0xFFAAAAAA),
+                                    fontSize: 15,
+                                  ),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 100), // padding for floating navbar
-                ],
-              ),
+                ),
+
+                // --- List Body ---
+                SliverPadding(
+                  padding: const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 100.0),
+                  sliver: _buildBuildingsList(),
+                ),
+              ],
             ),
           ),
 
@@ -318,11 +333,15 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting ||
             _isLoadingIds) {
-          return const Center(
-              child: CircularProgressIndicator(color: Colors.black));
+          return const SliverToBoxAdapter(
+            child: Center(
+                child: CircularProgressIndicator(color: Colors.black)),
+          );
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return SliverToBoxAdapter(
+            child: Center(child: Text('Error: ${snapshot.error}')),
+          );
         }
 
         var buildings = snapshot.data ?? [];
@@ -333,7 +352,9 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
         }
 
         if (buildings.isEmpty) {
-          return const Center(child: Text('No buildings found.'));
+          return const SliverToBoxAdapter(
+            child: Center(child: Text('No buildings found.')),
+          );
         }
 
         final downloadedMaps = buildings
@@ -343,45 +364,56 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
             .where((b) => !_downloadedBuildingIds.contains(b.id))
             .toList();
 
-        return ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            if (downloadedMaps.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12.0),
-                child: Text(
-                  'Downloaded Maps',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+        final listItems = <Widget>[];
+
+        if (downloadedMaps.isNotEmpty) {
+          listItems.add(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                'Downloaded Maps',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-              ...downloadedMaps.map((b) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: _buildBuildingCard(b, isDownloaded: true),
-                  )),
-              if (availableMaps.isNotEmpty) const SizedBox(height: 16),
-            ],
-            if (availableMaps.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12.0),
-                child: Text(
-                  'Available Maps',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+            ),
+          );
+          listItems.addAll(downloadedMaps.map((b) => Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: _buildBuildingCard(b, isDownloaded: true),
+              )));
+          if (availableMaps.isNotEmpty) {
+            listItems.add(const SizedBox(height: 16));
+          }
+        }
+
+        if (availableMaps.isNotEmpty) {
+          listItems.add(
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                'Available Maps',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-              ...availableMaps.map((b) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: _buildBuildingCard(b, isDownloaded: false),
-                  )),
-            ],
-          ],
+            ),
+          );
+          listItems.addAll(availableMaps.map((b) => Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: _buildBuildingCard(b, isDownloaded: false),
+              )));
+        }
+
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => listItems[index],
+            childCount: listItems.length,
+          ),
         );
       },
     );
@@ -543,8 +575,8 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
                               ElevatedButton(
                                 onPressed: () => _deleteMap(building.id),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.redAccent,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: const Color.fromARGB(255, 244, 81, 70),
                                   elevation: 0,
                                   minimumSize: const Size(36, 36),
                                   tapTargetSize:
@@ -596,5 +628,28 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
         ],
       ),
     );
+  }
+}
+
+class _StickySearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickySearchBarDelegate({required this.child});
+
+  @override
+  double get minExtent => 76.0;
+
+  @override
+  double get maxExtent => 76.0;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(covariant _StickySearchBarDelegate oldDelegate) {
+    return child != oldDelegate.child;
   }
 }

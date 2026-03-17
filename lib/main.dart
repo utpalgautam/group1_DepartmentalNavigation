@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart' as app_auth;
 import 'providers/navigation_provider.dart';
+import 'providers/security_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => app_auth.AuthProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
+        ChangeNotifierProvider(create: (_) => SecurityProvider()),
       ],
       child: MaterialApp(
         title: 'NITC Campus Navigator',
@@ -106,6 +108,35 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     if (auth.isAuthenticated) {
+      final security = context.watch<SecurityProvider>();
+      
+      if (security.isDeviceLockEnabled && !security.isUnlocked) {
+        return Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline, size: 64, color: AppColors.primary),
+                const SizedBox(height: 24),
+                const Text(
+                  'App Locked',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () => security.authenticate(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  ),
+                  child: const Text('Unlock with Device Lock', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
       return const HomeScreen();
     }
 

@@ -9,13 +9,13 @@ class AppConstants {
   static const String prefUserType = 'user_type';
   
   // GraphHopper Server
-  static const String graphHopperBaseUrl = 'http://172.21.32.169:8989'; // Changed to local IP for mobile access
-  static const String graphHopperApiKey = ''; // Not needed for local
+  static const String graphHopperBaseUrl = 'https://group1-departmentalnavigation.onrender.com'; // Hosted on Render
+  static const String graphHopperApiKey = ''; // Not needed for self-hostedf-hosted
   
   // Map Defaults
   static const double defaultMapZoom = 17.0;
-  static const double campusLat = 11.320; // NITC approximate latitude
-  static const double campusLng = 76.020; // NITC approximate longitude
+  static const double campusLat = 11.319972; // NITC exact latitude
+  static const double campusLng = 75.932639; // NITC exact longitude
   
   // Navigation
   static const double entryPointRadius = 20.0; // meters

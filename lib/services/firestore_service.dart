@@ -95,6 +95,12 @@ class FirestoreService {
     });
   }
 
+  Future<void> clearAllSavedLocations(String uid) async {
+    await _users.doc(uid).update({
+      'savedLocations': []
+    });
+  }
+
   // ========== BUILDING OPERATIONS ==========
 
   Future<void> addBuilding(BuildingModel building) async {

@@ -255,7 +255,16 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
                   child: Center(child: Text('Map for Floor $_currentFloor not available')),
                ),
 
-            // 2. The Route Overlay
+            // 2. POIs Overlay
+            if (_currentFloorData != null && _currentFloorData!.pois.isNotEmpty)
+              Positioned.fill(
+                child: CustomPaint(
+                  size: const Size(300, 400),
+                  painter: _POIPainter(pois: _currentFloorData!.pois),
+                ),
+              ),
+
+            // 3. The Route Overlay
             if (_currentRoute != null)
                CustomPaint(
                   size: const Size(300, 400), // Should match map dimensions
@@ -480,6 +489,55 @@ class _RoutePainter extends CustomPainter {
     // Draw Start Marker
     final startPaint = Paint()..color = Colors.green..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(points.first.x, points.first.y), 6.0, startPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _POIPainter extends CustomPainter {
+  final List<POI> pois;
+
+  _POIPainter({required this.pois});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pointPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.fill;
+
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    const textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 8,
+      fontWeight: FontWeight.bold,
+      backgroundColor: Colors.white70,
+    );
+
+    for (final poi in pois) {
+      final offset = Offset(poi.x * size.width, poi.y * size.height);
+      
+      // Draw point
+      canvas.drawCircle(offset, 4.0, pointPaint);
+      canvas.drawCircle(offset, 4.0, borderPaint);
+
+      // Draw label
+      final textPainter = TextPainter(
+        text: TextSpan(text: poi.name, style: textStyle),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      
+      // Position label slightly above the point
+      textPainter.paint(
+        canvas,
+        Offset(offset.dx - (textPainter.width / 2), offset.dy - 12),
+      );
+    }
   }
 
   @override

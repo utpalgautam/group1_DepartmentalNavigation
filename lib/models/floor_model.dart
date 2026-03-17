@@ -1,3 +1,31 @@
+class POI {
+  final String name;
+  final double x;
+  final double y;
+
+  POI({
+    required this.name,
+    required this.x,
+    required this.y,
+  });
+
+  factory POI.fromFirestore(Map<String, dynamic> data) {
+    return POI(
+      name: data['name'] ?? '',
+      x: (data['x'] ?? 0.0).toDouble(),
+      y: (data['y'] ?? 0.0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'x': x,
+      'y': y,
+    };
+  }
+}
+
 class FloorModel {
   final String buildingId;
   final int floorNumber;
@@ -11,12 +39,15 @@ class FloorModel {
   /// Raster fallback: URL of a PNG/JPG floor map image.
   final String? mapImageUrl;
 
+  final List<POI> pois;
+
   FloorModel({
     required this.buildingId,
     required this.floorNumber,
     this.svgMapData,
     this.svgMapUrl,
     this.mapImageUrl,
+    this.pois = const [],
   });
 
   factory FloorModel.fromFirestore(
@@ -27,6 +58,9 @@ class FloorModel {
       svgMapData: data['svgContent'] as String? ?? data['svgMapData'] as String?,
       svgMapUrl: data['svgMapUrl'] as String?,
       mapImageUrl: data['mapImageUrl'] as String?,
+      pois: (data['pois'] as List<dynamic>? ?? [])
+          .map((p) => POI.fromFirestore(p as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -35,6 +69,7 @@ class FloorModel {
       if (svgMapData != null) 'svgMapData': svgMapData,
       if (svgMapUrl != null) 'svgMapUrl': svgMapUrl,
       if (mapImageUrl != null) 'mapImageUrl': mapImageUrl,
+      'pois': pois.map((p) => p.toFirestore()).toList(),
     };
   }
 }

@@ -1,4 +1,4 @@
-datareader.import.date=2026-02-24T17:53:38Z
+datareader.import.date=2026-03-10T12:51:28Z
 datareader.data.date=1970-01-01T00:00:00Z
 profiles=car|475363489,bike|560971619,foot|-1073412236
 graph.em.version=3

@@ -12,7 +12,10 @@ import '../home/search_screen.dart';
 import '../map/offline_maps_screen.dart';
 import 'change_password_screen.dart';
 import 'recent_searches_screen.dart';
+import 'saved_locations_screen.dart';
 import 'edit_details_screen.dart';
+import '../../main.dart';
+import '../../providers/security_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -23,6 +26,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _selectedSpeed = 'Normal';
+  String _selectedDistanceMetric = 'Kilometers';
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
@@ -97,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = auth.currentUser;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -105,18 +109,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.only(left: 16.0),
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.black,
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                 if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                 } else {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-                 }
-              }, // Though usually used in a tab bar, providing a back button
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.pop(context), // Though usually used in a tab bar, providing a back button
             ),
           ),
         ),
@@ -142,13 +140,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const EditDetailsScreen(),
+                        builder: (_) => const SavedLocationsScreen(),
                       ),
                     );
                   },
-                  child: _buildListTile('Edit Details'),
+                  child: _buildListTile(
+                    title: 'Saved Locations',
+                    icon: Icons.bookmark,
+                    iconColor: Colors.blue[600]!,
+                    iconBgColor: Colors.blue[50]!,
+                  ),
                 ),
-                const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFEEEEEE)),
+                const Divider(height: 1, indent: 64, endIndent: 0, color: Color(0xFFF0F0F0)),
                 InkWell(
                   onTap: () {
                     Navigator.push(
@@ -158,7 +161,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     );
                   },
-                  child: _buildListTile('Recent Searches'),
+                  child: _buildListTile(
+                    title: 'Recent Searches',
+                    icon: Icons.history,
+                    iconColor: Colors.orange[600]!,
+                    iconBgColor: Colors.orange[50]!,
+                  ),
                 ),
               ]),
               const SizedBox(height: 24),
@@ -174,17 +182,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     );
                   },
-                  child: _buildListTile('Changed Password'),
+                  child: _buildListTile(
+                    title: 'Change Password',
+                    icon: Icons.password, // Lock reset or similar
+                    iconColor: Colors.blueGrey[600]!,
+                    iconBgColor: Colors.blueGrey[50]!,
+                  ),
                 ),
-                const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFEEEEEE)),
-                _buildListTile('PIN Lock'),
+                const Divider(height: 1, indent: 64, endIndent: 0, color: Color(0xFFF0F0F0)),
+                Consumer<SecurityProvider>(
+                  builder: (context, security, child) {
+                    return _buildListTile(
+                      title: 'PIN Lock',
+                      icon: Icons.pin_rounded, // or a similar 123 icon
+                      iconColor: Colors.blueGrey[600]!,
+                      iconBgColor: Colors.blueGrey[50]!,
+                      trailing: Switch(
+                        value: security.isDeviceLockEnabled,
+                        activeColor: Colors.white,
+                        activeTrackColor: Colors.blue[600],
+                        onChanged: (value) async {
+                          if (value) {
+                            final success = await security.authenticate();
+                            if (success) {
+                              security.setDeviceLockEnabled(true);
+                            }
+                          } else {
+                            final success = await security.authenticate();
+                            if (success) {
+                              security.setDeviceLockEnabled(false);
+                            }
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
               ]),
               const SizedBox(height: 24),
               
               _buildSectionTitle('Preferences'),
               _buildCardContainer([
-                _buildListTile('Distance Metric'),
-                const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFEEEEEE)),
+                _buildListTile(
+                  title: 'Distance Metric',
+                  icon: Icons.straighten,
+                  iconColor: Colors.green[600]!,
+                  iconBgColor: Colors.green[50]!,
+                  trailing: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedDistanceMetric,
+                      icon: const Icon(Icons.expand_more, color: Colors.grey, size: 20),
+                      style: TextStyle(color: Colors.blue[600], fontSize: 13, fontWeight: FontWeight.w500),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedDistanceMetric = newValue;
+                          });
+                        }
+                      },
+                      items: <String>['Meters', 'Kilometers', 'Feet']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                const Divider(height: 1, indent: 64, endIndent: 0, color: Color(0xFFF0F0F0)),
                 _buildWalkingSpeedRow(),
               ]),
               const SizedBox(height: 48),
@@ -194,15 +260,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   await auth.logout();
                   if (mounted) {
-                     Navigator.of(context).popUntil((route) => route.isFirst);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                      (route) => false,
+                    );
                   }
                 },
-                child: const Text(
-                  'Log Out',
-                  style: TextStyle(
-                    color: Color(0xFFC0392B), // Dark red for logout
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                child: const Center(
+                  child: Text(
+                    'Log Out',
+                    style: TextStyle(
+                      color: Color(0xFFEF4444), // Refreshing red color
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -264,7 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Colors.black,
+                  color: Colors.blue[600],
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
@@ -293,12 +364,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: _pickImage,
-          child: const Text(
-            'Edit Photo',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const EditDetailsScreen(),
+              ),
+            );
+          },
+          child: Text(
+            'Edit Details',
             style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF4A6572), // A muted blue/grey from the mockup
+              color: Colors.blue[600],
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -309,15 +387,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+      padding: const EdgeInsets.only(left: 8.0, bottom: 12.0),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          title,
+          title.toUpperCase(),
           style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF999999),
-            fontWeight: FontWeight.w500,
+            fontSize: 12,
+            color: Color(0xFF9CA3AF),
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.0,
           ),
         ),
       ),
@@ -328,12 +407,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -343,44 +422,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildListTile(String title) {
+  Widget _buildListTile({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    Widget? trailing,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black87,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
+          if (trailing != null) trailing else const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF), size: 20),
         ],
       ),
     );
   }
 
   Widget _buildWalkingSpeedRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Walking Speed',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildListTile(
+          title: 'Walking Speed',
+          icon: Icons.directions_walk,
+          iconColor: Colors.purple[500]!,
+          iconBgColor: Colors.purple[50]!,
+          trailing: const SizedBox.shrink(),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+          child: Container(
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F0F0),
-              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
@@ -390,13 +486,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-        ],
-      ),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 16.0, top: 4.0),
+          child: Center(
+            child: Text(
+              'ADJUSTS YOUR ESTIMATED TIME OF ARRIVAL',
+              style: TextStyle(
+                fontSize: 9,
+                color: Color(0xFF9CA3AF),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildSpeedSegment(String speed) {
-    final isSelected = _selectedSpeed == speed;
+    final isSelected = _selectedSpeed.toLowerCase() == speed.toLowerCase();
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -408,11 +517,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -421,10 +530,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           alignment: Alignment.center,
           child: Text(
-            speed,
+            speed.toUpperCase(),
             style: TextStyle(
-              fontSize: 14,
-              color: isSelected ? Colors.black : const Color(0xFF666666),
+              fontSize: 11,
+              color: isSelected ? Colors.blue[600] : const Color(0xFF6B7280),
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),

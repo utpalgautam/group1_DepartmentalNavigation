@@ -227,15 +227,15 @@ class _CustomNavigationControlsState extends State<CustomNavigationControls> {
 
   Widget _buildTrackingControls() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(28, 32, 28, 40),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
         boxShadow: [
           BoxShadow(
             color: Colors.black12,
-            blurRadius: 20,
-            offset: Offset(0, -5),
+            blurRadius: 30,
+            offset: Offset(0, -10),
           ),
         ],
       ),
@@ -243,85 +243,107 @@ class _CustomNavigationControlsState extends State<CustomNavigationControls> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.distance,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${widget.time} ahead',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Flow Blue line',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                      widget.distance,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black,
+                        letterSpacing: -1,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'To reach\nDestination.',
-                      textAlign: TextAlign.right,
+                    const SizedBox(height: 6),
+                    Text(
+                      '${widget.time} ahead',
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blueGrey[400],
                       ),
                     ),
                   ],
                 ),
               ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Flow Blue line',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blueGrey[300],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'To reach\nDestination.',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Row(
             children: [
               Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.onConfirmArrival,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: InkWell(
+                    onTap: widget.onConfirmArrival,
+                    borderRadius: BorderRadius.circular(30),
+                    child: const Center(
+                      child: Text(
+                        'Confirm',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
-                  child: const Text('Confirm', style: TextStyle(fontSize: 16)),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.onStopNavigation,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: InkWell(
+                    onTap: widget.onStopNavigation,
+                    borderRadius: BorderRadius.circular(30),
+                    child: const Center(
+                      child: Text(
+                        'Exit Navigation',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
-                  child: const Text('Exit Navigation', style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],

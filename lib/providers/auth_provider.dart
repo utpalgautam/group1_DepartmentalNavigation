@@ -168,11 +168,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> changePassword({required String newPassword}) async {
+  Future<bool> changePassword({required String oldPassword, required String newPassword}) async {
+    if (oldPassword == newPassword) {
+      _errorMessage = "New password cannot be the same as your current password.";
+      notifyListeners();
+      return false;
+    }
+
     _setLoading(true);
     _clearError();
     try {
-      await _authService.updatePassword(newPassword);
+      await _authService.updatePassword(oldPassword: oldPassword, newPassword: newPassword);
       return true;
     } catch (e) {
       _errorMessage = e.toString();

@@ -72,7 +72,39 @@ class _SavedLocationsScreenState extends State<SavedLocationsScreen> {
       } else {
         if (mounted) {
           setState(() {
-            _allSavedLocations = [];
+            _allSavedLocations = [
+              LocationModel(
+                id: 'sample_faculty_1',
+                name: 'Dr. John Doe',
+                type: LocationType.faculty,
+                buildingId: 'b_sample_1',
+                floor: 2,
+                roomNumber: '204',
+                description: 'Professor of Computer Science',
+              ),
+              LocationModel(
+                id: 'sample_faculty_2',
+                name: 'Dr. Jane Smith',
+                type: LocationType.faculty,
+                buildingId: 'b_sample_1',
+                floor: 3,
+                roomNumber: '301',
+                description: 'Associate Professor of IT',
+              ),
+              LocationModel(
+                id: 'sample_faculty_3',
+                name: 'Dr. Robert Brown',
+                type: LocationType.faculty,
+                buildingId: 'b_sample_2',
+                floor: 1,
+                roomNumber: '105',
+                description: 'Assistant Professor of AI',
+              ),
+            ];
+            _buildingNames = {
+              'b_sample_1': 'Main IT Block',
+              'b_sample_2': 'New Academic Building',
+            };
             _isLoading = false;
           });
         }
@@ -92,6 +124,38 @@ class _SavedLocationsScreenState extends State<SavedLocationsScreen> {
        setState(() {
          _allSavedLocations.removeWhere((loc) => loc.id == locationId);
          user.savedLocations.remove(locationId); 
+       });
+    }
+  }
+
+  Future<void> _clearAllSavedLocations() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All'),
+        content: const Text('Are you sure you want to clear all saved locations?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final auth = context.read<app_auth.AuthProvider>();
+    final user = auth.currentUser;
+    if (user != null) {
+       await _firestoreService.clearAllSavedLocations(user.uid);
+       setState(() {
+         _allSavedLocations.clear();
+         user.savedLocations.clear();
        });
     }
   }
@@ -174,6 +238,18 @@ class _SavedLocationsScreenState extends State<SavedLocationsScreen> {
                       ),
                     ),
                   ),
+                  if (_allSavedLocations.isNotEmpty)
+                    GestureDetector(
+                      onTap: _clearAllSavedLocations,
+                      child: const Text(
+                        'Clear all',
+                        style: TextStyle(
+                          color: Color(0xFF666666),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 24),
