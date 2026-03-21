@@ -50,7 +50,7 @@ const InteractiveRoutePage = () => {
     return (
         <div className="ir-page-container">
             <Header
-                title="Interactive Route"
+                title="Indoor Navigation Management"
                 searchTerm={searchTerm}
                 onSearchChange={e => setSearchTerm(e.target.value)}
             />

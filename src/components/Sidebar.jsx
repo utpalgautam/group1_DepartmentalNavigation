@@ -47,11 +47,6 @@ const Sidebar = () => {
               <FaRoute /> Routing
             </NavLink>
           </li>
-          <li>
-            <NavLink to="/indoor-graph" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-              <FaLayerGroup /> Indoor Graph
-            </NavLink>
-          </li>
         </ul>
       </div>
 

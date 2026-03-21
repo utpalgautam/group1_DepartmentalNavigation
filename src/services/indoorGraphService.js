@@ -1,11 +1,7 @@
 // src/services/indoorGraphService.js
 import { db } from './firebaseConfig';
 import {
-    collection,
     doc,
-    getDocs,
-    query,
-    where,
     setDoc,
     updateDoc,
     serverTimestamp,
@@ -78,4 +74,40 @@ export const updateGraphPartial = async (buildingId, floorNo, part) => {
         console.error("Error updating graph partial:", error);
         throw error;
     }
+};
+
+/**
+ * Create a new node with SVG native coordinates
+ * @param {string} label
+ * @param {number} x - SVG coordinate x
+ * @param {number} y - SVG coordinate y
+ * @param {string} type - "room" | "hallway" | "stairs" | "entrance"
+ * @returns {Object} Node object
+ */
+export const createNode = (label, x, y, type = 'room') => {
+    const id = `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return {
+        id,
+        label,
+        x: parseFloat(x.toFixed(2)),
+        y: parseFloat(y.toFixed(2)),
+        type
+    };
+};
+
+/**
+ * Create a new edge
+ * @param {string} fromNodeId
+ * @param {string} toNodeId
+ * @param {number} weight - optional edge weight (default 1)
+ * @returns {Object} Edge object
+ */
+export const createEdge = (fromNodeId, toNodeId, weight = 1) => {
+    const id = `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return {
+        id,
+        from: fromNodeId,
+        to: toNodeId,
+        weight
+    };
 };

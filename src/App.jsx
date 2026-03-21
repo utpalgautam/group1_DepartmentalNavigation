@@ -10,7 +10,6 @@ import OutdoorMarkersPage from './pages/OutdoorMarkersPage';
 import HallsLabsPage from './pages/HallsLabsPage';
 import SettingsPage from './pages/SettingsPage';
 import InteractiveRoutePage from './pages/InteractiveRoutePage';
-import IndoorGraphPage from './pages/IndoorGraphPage';
 import './styles/main.css';
 
 function App() {
@@ -25,7 +24,6 @@ function App() {
             <Route path="/buildings" element={<BuildingManagement />} />
             <Route path="/halls-labs" element={<HallsLabsPage />} />
             <Route path="/routing" element={<InteractiveRoutePage />} />
-            <Route path="/indoor-graph" element={<IndoorGraphPage />} />
             {/* Removed analytics route */}
             <Route path="/users" element={<UserManagementPage />} />
             <Route path="/settings" element={<SettingsPage />} />
