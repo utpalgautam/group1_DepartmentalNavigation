@@ -34,23 +34,49 @@ class OutdoorNavigationScreen extends StatefulWidget {
       _OutdoorNavigationScreenState();
 }
 
-class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
+class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
+    with SingleTickerProviderStateMixin {
   MaplibreMapController? _mapController;
   bool _isMapReady = false;
   bool _isTransitioningToIndoor = false;
   Symbol? _userMarker;
-
   StreamSubscription<Position>? _positionStream; // Keep for passive tracking only if needed
+
+  // Animation for smooth marker movement
+  late AnimationController _markerAnimationController;
+  LatLng? _previousPosition;
+  LatLng? _targetPosition;
+  double _currentHeading = 0;
 
   @override
   void initState() {
     super.initState();
-    // Start real-time tracking via provider if possible, but screen can have its own for passive view
+    _markerAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000), // Match GPS frequency
+    )..addListener(_onMarkerAnimationTick);
+  }
+
+  void _onMarkerAnimationTick() {
+    if (_previousPosition == null || _targetPosition == null || _userMarker == null) return;
+
+    final double t = _markerAnimationController.value;
+    final double lat = _previousPosition!.latitude + (_targetPosition!.latitude - _previousPosition!.latitude) * t;
+    final double lng = _previousPosition!.longitude + (_targetPosition!.longitude - _previousPosition!.longitude) * t;
+
+    _mapController?.updateSymbol(
+      _userMarker!,
+      SymbolOptions(
+        geometry: LatLng(lat, lng),
+        iconRotate: _currentHeading,
+      ),
+    );
   }
 
   @override
   void dispose() {
     _positionStream?.cancel();
+    _markerAnimationController.dispose();
     super.dispose();
   }
 
@@ -392,17 +418,30 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
     if (provider.isNavigating &&
         provider.snappedPosition != null &&
         _isMapReady) {
-      _updateUserMarkerNavigating(
-          provider.snappedPosition!, provider.currentPosition?.heading ?? 0);
+      
+      final newPosition = provider.snappedPosition!;
+      _currentHeading = provider.currentPosition?.heading ?? 0;
+
+      if (_targetPosition == null) {
+        // Initial position
+        _previousPosition = newPosition;
+        _targetPosition = newPosition;
+        _updateUserMarkerNavigating(newPosition, _currentHeading);
+      } else if (newPosition != _targetPosition) {
+        // New position arrived, start interpolation
+        _previousPosition = _targetPosition;
+        _targetPosition = newPosition;
+        _markerAnimationController.forward(from: 0.0);
+      }
 
       _mapController?.animateCamera(
         CameraUpdate.newCameraPosition(CameraPosition(
-          target: provider.snappedPosition!,
-          zoom: 18,
-          bearing: provider.currentPosition?.heading ?? 0,
-          tilt: 45,
+          target: newPosition,
+          zoom: 19, // Slightly closer for professional feel
+          bearing: _currentHeading,
+          tilt: 55, // Immersive tilt
         )),
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 1000), // Smoother camera follow
       );
     }
   }
