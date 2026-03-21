@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -41,6 +40,7 @@ class NavigationProvider extends ChangeNotifier {
   StreamSubscription<Position>? _positionStreamSubscription;
   final List<Position> _positionBuffer = [];
   int _positionUpdateCount = 0;
+  int _deviationCount = 0; // Tracks consecutive off-route readings
 
   bool get isNavigating => _isNavigating;
   bool get isIndoor => _isIndoor;
@@ -167,6 +167,7 @@ class NavigationProvider extends ChangeNotifier {
     _snappedPosition = null;
     _positionBuffer.clear();
     _positionUpdateCount = 0;
+    _deviationCount = 0;
     _currentInstructionIndex = 0;
     if (_currentRoute!.instructions.isNotEmpty) {
       _currentInstruction = _currentRoute!.instructions.first.text;
@@ -263,14 +264,22 @@ class NavigationProvider extends ChangeNotifier {
         _snappedPosition = newLatLng;
       }
 
-      // 4. Deviation Detection: Trigger reroute if > 20m away and not recently rerouted (5s)
+      // 4. Deviation Detection: Trigger reroute if > 20m away and not recently rerouted (3s)
       if (distFromRoute > 20.0 && !_isRerouting) {
-        final now = DateTime.now();
-        if (_lastRerouteTime == null || now.difference(_lastRerouteTime!).inSeconds >= 5) {
-          _triggerReroute();
-        } else {
-          debugPrint("Deviation detected, but throttling reroute (last was < 5s ago)");
+        _deviationCount++;
+        debugPrint("Deviation detected ($_deviationCount/3): ${distFromRoute.toStringAsFixed(1)}m");
+        
+        if (_deviationCount >= 3) {
+          final now = DateTime.now();
+          if (_lastRerouteTime == null || now.difference(_lastRerouteTime!).inSeconds >= 3) {
+            _triggerReroute();
+          } else {
+            debugPrint("Sustained deviation, but throttling reroute (last was < 3s ago)");
+          }
         }
+      } else if (distFromRoute <= 15.0) {
+        // Reset deviation count if we are back on track
+        _deviationCount = 0;
       }
 
     // 5. Progress Tracking (Update Remaining Route & Distance)
@@ -345,6 +354,7 @@ class NavigationProvider extends ChangeNotifier {
         _currentInstruction = _currentRoute!.instructions.isNotEmpty 
             ? _currentRoute!.instructions.first.text 
             : "Follow the new route";
+        _deviationCount = 0; // Reset after successful reroute
       }
     } catch (e) {
       debugPrint("Rerouting failed: $e");
