@@ -411,7 +411,10 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
   void _onProviderUpdated() {
     final provider = Provider.of<NavigationProvider>(context, listen: false);
     if (provider.currentRoute != null && _isMapReady) {
-      _drawRoute(provider.remainingRouteCoordinates);
+      _drawRoute(
+        provider.remainingRouteCoordinates, 
+        fullPoints: provider.currentRoute?.coordinates
+      );
     }
 
     // Update user marker and camera
@@ -473,7 +476,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
     }
   }
 
-  void _drawRoute(List<LatLng> points) async {
+  void _drawRoute(List<LatLng> points, {List<LatLng>? fullPoints}) async {
     if (_mapController == null || points.isEmpty) return;
 
     try {
@@ -481,11 +484,24 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
       final provider = Provider.of<NavigationProvider>(context, listen: false);
 
       await _mapController!.clearLines();
+
+      // 1. Draw Background (Full Route in Gray)
+      if (fullPoints != null && fullPoints.isNotEmpty) {
+        await _mapController!.addLine(LineOptions(
+          geometry: fullPoints,
+          lineColor: '#D3D3D3', // Light gray
+          lineWidth: 8.0,
+          lineOpacity: 0.5,
+          lineJoin: 'round',
+        ));
+      }
+
+      // 2. Draw Foreground (Remaining Route in Blue)
       await _mapController!.addLine(LineOptions(
         geometry: points,
         lineColor: '#1A73E8', // Match Google blue
         lineWidth: 8.0,
-        lineOpacity: 0.8,
+        lineOpacity: 0.9,
         lineJoin: 'round',
       ));
 
