@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../providers/navigation_provider.dart';
 import '../../models/building_model.dart';
 import '../../core/constants/app_constants.dart';
@@ -38,6 +40,20 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
   bool _isTransitioningToIndoor = false;
   Symbol? _userMarker;
 
+  StreamSubscription<Position>? _positionStream; // Keep for passive tracking only if needed
+
+  @override
+  void initState() {
+    super.initState();
+    // Start real-time tracking via provider if possible, but screen can have its own for passive view
+  }
+
+  @override
+  void dispose() {
+    _positionStream?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<NavigationProvider>(
@@ -66,7 +82,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
                   zoom: AppConstants.defaultMapZoom,
                 ),
                 styleString: MapStyle.osm,
-                myLocationEnabled: _isMapReady && !navProvider.isNavigating,
+                myLocationEnabled: false, // Replaced by custom live tracking
                 myLocationRenderMode: MyLocationRenderMode.normal,
                 compassEnabled: true,
                 attributionButtonPosition: AttributionButtonPosition.bottomLeft,
@@ -287,6 +303,81 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
 
     // Kick initial update in case provider already has a route
     _onProviderUpdated();
+
+    // Only start passive tracking if not navigating
+    if (!provider.isNavigating) {
+      _startPassiveTracking();
+    }
+  }
+
+  void _startPassiveTracking() async {
+    // Check permissions
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+
+    _positionStream?.cancel();
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 5,
+      ),
+    ).listen((Position position) {
+      if (mounted) {
+        final navProvider = Provider.of<NavigationProvider>(context, listen: false);
+        if (!navProvider.isNavigating) {
+          _updateLiveUserMarker(position);
+        }
+      }
+    });
+  }
+
+  void _updateLiveUserMarker(Position position) async {
+    if (_mapController == null || !_isMapReady) return;
+
+    final navProvider = Provider.of<NavigationProvider>(context, listen: false);
+    final latLng = LatLng(position.latitude, position.longitude);
+
+    if (_userMarker == null) {
+      try {
+        _userMarker = await _mapController!.addSymbol(
+          SymbolOptions(
+            geometry: latLng,
+            iconImage: 'assets/icons/navigation_marker.png', // Match map style
+            iconSize: 0.5,
+            iconRotate: position.heading,
+          ),
+        );
+      } catch (e) {
+        debugPrint('Error adding real-time user marker: $e');
+      }
+    } else {
+      _mapController!.updateSymbol(
+        _userMarker!,
+        SymbolOptions(
+          geometry: latLng,
+          iconRotate: position.heading,
+        ),
+      );
+    }
+
+    // Camera animation should only happen if not being manipulated by the NavigationProvider's active routing
+    if (!navProvider.isNavigating) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(CameraPosition(
+          target: latLng,
+          zoom: 18,
+          bearing: position.heading,
+          tilt: 45,
+        )),
+        duration: const Duration(milliseconds: 1000),
+      );
+    }
   }
 
   void _onProviderUpdated() {
@@ -299,7 +390,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
     if (provider.isNavigating &&
         provider.snappedPosition != null &&
         _isMapReady) {
-      _updateUserMarker(
+      _updateUserMarkerNavigating(
           provider.snappedPosition!, provider.currentPosition?.heading ?? 0);
 
       _mapController?.animateCamera(
@@ -311,13 +402,10 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
         )),
         duration: const Duration(milliseconds: 500),
       );
-    } else if (!provider.isNavigating && _userMarker != null) {
-      _mapController?.removeSymbol(_userMarker!);
-      _userMarker = null;
     }
   }
 
-  void _updateUserMarker(LatLng position, double heading) async {
+  void _updateUserMarkerNavigating(LatLng position, double heading) async {
     if (_mapController == null) return;
 
     if (_userMarker == null) {
@@ -420,24 +508,22 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
     ];
 
     for (var building in buildings) {
-      if (_mapController != null && _mapController!.symbols != null) {
-        try {
-          await _mapController!.addSymbol(
-            SymbolOptions(
-              geometry: LatLng(building['lat'], building['lng']),
-              iconImage: 'assets/icons/building_marker.png',
-              iconSize: 0.5,
-              textField: building['name'],
-              textOffset: const Offset(0, 1.5),
-              textSize: 12,
-              textColor: '#000000',
-              textHaloColor: '#FFFFFF',
-              textHaloWidth: 2,
-            ),
-          );
-        } catch (e) {
-          debugPrint('Error adding building marker: $e');
-        }
+      try {
+        await _mapController!.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(building['lat'], building['lng']),
+            iconImage: 'assets/icons/building_marker.png',
+            iconSize: 0.5,
+            textField: building['name'],
+            textOffset: const Offset(0, 1.5),
+            textSize: 12,
+            textColor: '#000000',
+            textHaloColor: '#FFFFFF',
+            textHaloWidth: 2,
+          ),
+        );
+      } catch (e) {
+        debugPrint('Error adding building marker: $e');
       }
     }
   }
@@ -447,20 +533,18 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
         widget.destLat == null ||
         widget.destLng == null) return;
 
-    if (_mapController != null && _mapController!.symbols != null) {
-      try {
-        await _mapController!.addSymbol(
-          SymbolOptions(
-            geometry: LatLng(
-                widget.targetEntryPoint?.latitude ?? widget.destLat!,
-                widget.targetEntryPoint?.longitude ?? widget.destLng!),
-            iconImage: 'assets/icons/destination_marker.png',
-            iconSize: 0.6,
-          ),
-        );
-      } catch (e) {
-        debugPrint('Error adding destination marker: $e');
-      }
+    try {
+      await _mapController!.addSymbol(
+        SymbolOptions(
+          geometry: LatLng(
+              widget.targetEntryPoint?.latitude ?? widget.destLat!,
+              widget.targetEntryPoint?.longitude ?? widget.destLng!),
+          iconImage: 'assets/icons/destination_marker.png',
+          iconSize: 0.6,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error adding destination marker: $e');
     }
   }
 

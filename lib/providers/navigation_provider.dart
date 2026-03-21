@@ -36,10 +36,11 @@ class NavigationProvider extends ChangeNotifier {
   
   Position? _currentPosition; // Raw filtered position
   LatLng? _snappedPosition; // Snapped and smoothed for UI
-  Position? _lastRawPosition; // Used for smoothing
   DateTime? _lastRerouteTime; // Throttling reroutes
   
   StreamSubscription<Position>? _positionStreamSubscription;
+  final List<Position> _positionBuffer = [];
+  int _positionUpdateCount = 0;
 
   bool get isNavigating => _isNavigating;
   bool get isIndoor => _isIndoor;
@@ -164,7 +165,8 @@ class NavigationProvider extends ChangeNotifier {
     _isIndoor = false;
     _remainingRouteCoordinates = List.from(_currentRoute!.coordinates);
     _snappedPosition = null;
-    _lastRawPosition = null;
+    _positionBuffer.clear();
+    _positionUpdateCount = 0;
     _currentInstructionIndex = 0;
     if (_currentRoute!.instructions.isNotEmpty) {
       _currentInstruction = _currentRoute!.instructions.first.text;
@@ -215,7 +217,6 @@ class NavigationProvider extends ChangeNotifier {
       }
     });
   }
-
   void _handlePositionUpdate(Position position) {
     // 1. Accuracy Filtering: Ignore readings > 25 meters
     if (position.accuracy > 25) {
@@ -226,6 +227,13 @@ class NavigationProvider extends ChangeNotifier {
     _currentPosition = position;
     LatLng newLatLng = LatLng(position.latitude, position.longitude);
 
+    // Add to buffer for Map Matching
+    _positionBuffer.add(position);
+    if (_positionBuffer.length > 10) {
+      _positionBuffer.removeAt(0);
+    }
+    _positionUpdateCount++;
+
     // 2. Smoothing: weighted average (0.7 * previous + 0.3 * current)
     // We use the last smoothed/snapped position if available for continuity
     if (_snappedPosition != null) {
@@ -235,7 +243,11 @@ class NavigationProvider extends ChangeNotifier {
         alpha: 0.3, // Matches (0.7 * previous + 0.3 * new)
       );
     }
-    _lastRawPosition = position;
+
+    // 2.5 Map Matching: Trigger every 5 meaningful updates
+    if (_isNavigating && _positionUpdateCount % 5 == 0 && _positionBuffer.length >= 3) {
+      _performMapMatching();
+    }
 
     if (_currentRoute != null && _currentRoute!.coordinates.isNotEmpty) {
       // 3. Snapping
@@ -342,6 +354,17 @@ class NavigationProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> _performMapMatching() async {
+    if (_positionBuffer.isEmpty) return;
+    
+    final matchedLatLng = await _graphHopperService.matchPoints(List.from(_positionBuffer));
+    if (matchedLatLng != null) {
+      debugPrint("Map Matching Result: Snapped from (${_currentPosition?.latitude}, ${_currentPosition?.longitude}) to (${matchedLatLng.latitude}, ${matchedLatLng.longitude})");
+      _snappedPosition = matchedLatLng;
+      notifyListeners();
+    }
+  }
+
   void _checkArrival(Position position) {
     if (_targetEntryPoint != null) {
       double distanceToEntry = NavigationUtils.calculateDistance(
@@ -385,7 +408,6 @@ class NavigationProvider extends ChangeNotifier {
     _currentInstruction = null;
     _distanceToDestination = null;
     _snappedPosition = null;
-    _lastRawPosition = null;
     _isRerouting = false;
     
     _positionStreamSubscription?.cancel();

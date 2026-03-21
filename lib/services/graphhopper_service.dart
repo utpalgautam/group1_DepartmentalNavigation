@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:geolocator/geolocator.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/navigation_utils.dart';
 
@@ -119,5 +120,63 @@ class GraphHopperService {
       print('Error fetching GraphHopper route: $e');
       rethrow;
     }
+  }
+  
+  /// Snaps a list of GPS points to the nearest road using GraphHopper's /match API.
+  Future<LatLng?> matchPoints(List<Position> points) async {
+    if (points.isEmpty) return null;
+    
+    try {
+      // 1. Construct GPX string
+      final gpx = _generateGpx(points);
+      
+      // 2. Send POST request to /match
+      final url = Uri.parse('$baseUrl/match?profile=car&type=json');
+      final response = await http.post(
+        url,
+        body: gpx,
+        headers: {'Content-Type': 'application/gpx+xml'},
+      ).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['paths'] != null && data['paths'].isNotEmpty) {
+          final path = data['paths'][0];
+          
+          // Get the last point from the matched path
+          if (path['points'] != null) {
+            final String encodedPoints = path['points'];
+            final List<LatLng> coordinates = NavigationUtils.decodePolyline(encodedPoints);
+            if (coordinates.isNotEmpty) {
+              return coordinates.last;
+            }
+          }
+        }
+      } else {
+        debugPrint('GraphHopper Match API Error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error during map matching: $e');
+    }
+    return null;
+  }
+
+  String _generateGpx(List<Position> points) {
+    final buffer = StringBuffer();
+    buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no" ?>');
+    buffer.writeln('<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="NITC Campus Navigator">');
+    buffer.writeln('  <trk>');
+    buffer.writeln('    <trkseg>');
+    
+    for (var p in points) {
+      final timeStr = p.timestamp.toUtc().toIso8601String();
+      buffer.writeln('      <trkpt lat="${p.latitude}" lon="${p.longitude}"><time>$timeStr</time></trkpt>');
+    }
+    
+    buffer.writeln('    </trkseg>');
+    buffer.writeln('  </trk>');
+    buffer.writeln('</gpx>');
+    return buffer.toString();
   }
 }
