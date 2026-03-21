@@ -102,12 +102,13 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
               MaplibreMap(
                 onMapCreated: _onMapCreated,
                 onStyleLoadedCallback: _onStyleLoaded,
-                initialCameraPosition: const CameraPosition(
+                initialCameraPosition: CameraPosition(
                   target:
                       LatLng(AppConstants.campusLat, AppConstants.campusLng),
                   zoom: AppConstants.defaultMapZoom,
+                  tilt: 45,
                 ),
-                styleString: MapStyle.osm,
+                styleString: MapStyle.voyager,
                 myLocationEnabled: false, // Replaced by custom live tracking
                 myLocationRenderMode: MyLocationRenderMode.normal,
                 compassEnabled: true,
@@ -295,6 +296,9 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
       _isMapReady = true;
     });
 
+    // Add 3D Buildings
+    _add3DBuildings();
+
     // Add building markers
     _addBuildingMarkers();
 
@@ -442,10 +446,31 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
           target: newPosition,
           zoom: 19, // Slightly closer for professional feel
           bearing: _currentHeading,
-          tilt: 55, // Immersive tilt
+          tilt: 60, // Deep immersive 3D tilt
         )),
         duration: const Duration(milliseconds: 1000), // Smoother camera follow
       );
+    }
+  }
+
+  Future<void> _add3DBuildings() async {
+    if (_mapController == null) return;
+    
+    try {
+      // The Voyager GL style has a 'building' layer in the 'carto' source
+      await _mapController!.addLayer(
+        "carto",
+        "3d-buildings",
+        const FillExtrusionLayerProperties(
+          fillExtrusionColor: '#E4DCD0',
+          fillExtrusionHeight: ["get", "render_height"],
+          fillExtrusionBase: ["get", "render_min_height"],
+          fillExtrusionOpacity: 0.8,
+        ),
+        belowLayerId: "place_city_r5", // Place buildings below labels
+      );
+    } catch (e) {
+      debugPrint("Error adding 3D buildings: $e");
     }
   }
 
@@ -628,26 +653,5 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
 }
 
 class MapStyle {
-  static const String osm = '''
-  {
-    "version": 8,
-    "sources": {
-      "osm": {
-        "type": "raster",
-        "tiles": ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
-        "tileSize": 256,
-        "attribution": "© OpenStreetMap contributors © CARTO"
-      }
-    },
-    "layers": [
-      {
-        "id": "osm",
-        "type": "raster",
-        "source": "osm",
-        "minzoom": 0,
-        "maxzoom": 20
-      }
-    ]
-  }
-  ''';
+  static const String voyager = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
 }
