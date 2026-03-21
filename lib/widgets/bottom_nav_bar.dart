@@ -29,11 +29,11 @@ class CustomBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(0, Icons.home), // Home
-          _buildNavItem(1, Icons.exit_to_app), // Navigate/Directory
-          _buildNavItem(2, Icons.manage_search), // Search+
-          _buildNavItem(3, Icons.photo_library_outlined), // Map/Gallery
-          _buildNavItem(4, Icons.person_outline), // Profile
+          _buildNavItem(0, Icons.home_outlined), // Home
+          _buildNavItem(1, Icons.contacts_outlined), // Directory
+          _buildNavItem(2, Icons.apartment_outlined), // Navigate
+          _buildNavItem(3, Icons.map_outlined), // Offline Map
+          _buildNavItem(4, Icons.account_circle_outlined), // Profile
         ],
       ),
     );
@@ -46,20 +46,11 @@ class CustomBottomNavBar extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
-        width: 56, // Circular as requested
+        width: isSelected ? 80 : 50,
         height: 56,
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.transparent,
-          shape: BoxShape.circle,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  )
-                ]
-              : null,
+          borderRadius: BorderRadius.circular(28),
         ),
         child: Icon(
           icon,
