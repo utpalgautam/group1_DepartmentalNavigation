@@ -35,7 +35,6 @@ class OutdoorNavigationScreen extends StatefulWidget {
 class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
   MaplibreMapController? _mapController;
   bool _isMapReady = false;
-  bool _showTurnByTurn = false;
   bool _isTransitioningToIndoor = false;
   Symbol? _userMarker;
 
@@ -68,9 +67,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
                 ),
                 styleString: MapStyle.osm,
                 myLocationEnabled: _isMapReady && !navProvider.isNavigating,
-                myLocationRenderMode: (_isMapReady && !navProvider.isNavigating)
-                    ? MyLocationRenderMode.compass
-                    : MyLocationRenderMode.normal,
+                myLocationRenderMode: MyLocationRenderMode.normal,
                 compassEnabled: true,
                 attributionButtonPosition: AttributionButtonPosition.bottomLeft,
               ),
@@ -203,9 +200,8 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
         MaterialPageRoute(
           builder: (_) => IndoorNavigationScreen(
             buildingId: widget.targetBuilding!.id,
-            floor: widget.targetBuilding!.totalFloors > 1
-                ? 0
-                : 0, // start at floor 0
+            buildingName: widget.targetBuilding!.name,
+            floor: 0, // always start at ground floor
             entryPointId: widget.targetEntryPoint!.id,
             destinationLocationId: widget.destinationId,
           ),
@@ -331,7 +327,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen> {
             geometry: position,
             iconImage:
                 'assets/icons/navigation_marker.png', // We'll assume this exists or use building fallback
-            iconSize: 0.8,
+            iconSize: 0.5,
             iconRotate: heading,
           ),
         );

@@ -29,10 +29,10 @@ class CustomBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(0, Icons.home_outlined),           // Home
-          _buildNavItem(1, Icons.contacts_outlined),       // Directory
-          _buildNavItem(2, Icons.search),                  // Search
-          _buildNavItem(3, Icons.map_outlined),            // Offline Map
+          _buildNavItem(0, Icons.home_outlined), // Home
+          _buildNavItem(1, Icons.contacts_outlined), // Directory
+          _buildNavItem(2, Icons.apartment_outlined), // Navigate
+          _buildNavItem(3, Icons.map_outlined), // Offline Map
           _buildNavItem(4, Icons.account_circle_outlined), // Profile
         ],
       ),
@@ -50,7 +50,8 @@ class CustomBottomNavBar extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(28), // Pill shape for selected, circle for unselected roughly
+          borderRadius: BorderRadius.circular(
+              28), // Pill shape for selected, circle for unselected roughly
         ),
         child: Icon(
           icon,

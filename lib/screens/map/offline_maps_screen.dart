@@ -104,6 +104,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
     }
+
   }
 
   @override
@@ -229,6 +230,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
               ],
             ),
           ),
+
 
           // Floating Bottom Nav Bar
           Positioned(
@@ -483,6 +485,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
 
               const SizedBox(width: 16),
 
+
               // Building Details
               Expanded(
                 child: Padding(
@@ -511,11 +514,13 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(Icons.layers,
                               color: Colors.white, size: 16),
+
                           const SizedBox(width: 6),
                           Text(
                             '${building.totalFloors} Floors',

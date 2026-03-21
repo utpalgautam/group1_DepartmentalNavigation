@@ -8,7 +8,7 @@ import '../../providers/auth_provider.dart' as app_auth;
 import '../../widgets/bottom_nav_bar.dart';
 import '../directory/directory_screen.dart';
 import '../home/home_screen.dart';
-import '../home/search_screen.dart';
+import '../navigation/indoor_navigation_setup_screen.dart';
 import '../map/offline_maps_screen.dart';
 import 'change_password_screen.dart';
 import 'recent_searches_screen.dart';
@@ -42,15 +42,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _imageFile = File(pickedFile.path);
         });
-        
+
         if (mounted) {
           final auth = context.read<app_auth.AuthProvider>();
           final success = await auth.updateProfileImage(_imageFile!);
-          
+
           if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(success ? 'Profile image updated!' : (auth.errorMessage ?? 'Upload failed')),
+                content: Text(success
+                    ? 'Profile image updated!'
+                    : (auth.errorMessage ?? 'Upload failed')),
                 backgroundColor: success ? Colors.green : Colors.redAccent,
               ),
             );
@@ -85,13 +87,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (index == 4) return;
 
     if (index == 0) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const HomeScreen()));
     } else if (index == 1) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DirectoryScreen()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const DirectoryScreen()));
     } else if (index == 2) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SearchScreen()));
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (_) => const IndoorNavigationSetupScreen()));
     } else if (index == 3) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OfflineMapsScreen()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (_) => const OfflineMapsScreen()));
     }
   }
 
@@ -297,7 +305,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileHeader(String name, String subtitle) {
-    final profileUrl = context.read<app_auth.AuthProvider>().currentUser?.profileImageUrl;
+    final profileUrl =
+        context.read<app_auth.AuthProvider>().currentUser?.profileImageUrl;
     final ImageProvider? profileImage = _imageFile != null
         ? FileImage(_imageFile!)
         : _getProfileImageProvider(profileUrl);

@@ -69,14 +69,25 @@ class BuildingModel {
   }
 
   factory BuildingModel.fromFirestore(Map<String, dynamic> data, String id) {
+    final entryPointsData = data['entryPoints'];
+    List<EntryPoint> entryPoints = [];
+
+    if (entryPointsData is List) {
+      entryPoints = entryPointsData
+          .map((e) => EntryPoint.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else if (entryPointsData is Map) {
+      entryPoints = entryPointsData.values
+          .map((e) => EntryPoint.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
+
     return BuildingModel(
       id: id,
       name: data['name'] ?? '',
       latitude: (data['latitude'] ?? 0.0).toDouble(),
       longitude: (data['longitude'] ?? 0.0).toDouble(),
-      entryPoints: (data['entryPoints'] as List<dynamic>? ?? [])
-          .map((e) => EntryPoint.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      entryPoints: entryPoints,
       totalFloors: data['totalFloors'] ?? 1,
       imageUrl: data['imageUrl'] as String?,
     );

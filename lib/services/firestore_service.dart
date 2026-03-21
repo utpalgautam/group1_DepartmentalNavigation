@@ -23,7 +23,7 @@ class FirestoreService {
   CollectionReference get _floors => _firestore.collection('floormap');
 
   // ========== USER OPERATIONS ==========
-  
+
   Future<void> createUser(UserModel user) async {
     await _users.doc(user.uid).set(user.toFirestore());
   }
@@ -31,7 +31,8 @@ class FirestoreService {
   Future<UserModel?> getUser(String uid) async {
     final doc = await _users.doc(uid).get();
     if (doc.exists) {
-      return UserModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return UserModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }
     return null;
   }
@@ -47,9 +48,10 @@ class FirestoreService {
       if (!snapshot.exists) return;
       final data = snapshot.data() as Map<String, dynamic>?;
       if (data == null) return;
-      
-      List<String> recentSearches = List<String>.from(data['recentSearches'] ?? []);
-      
+
+      List<String> recentSearches =
+          List<String>.from(data['recentSearches'] ?? []);
+
       // Remove if exists to move it to the front
       recentSearches.remove(locationId);
       // Add to front
@@ -58,7 +60,7 @@ class FirestoreService {
       if (recentSearches.length > 8) {
         recentSearches = recentSearches.sublist(0, 8);
       }
-      
+
       transaction.update(docRef, {'recentSearches': recentSearches});
     });
   }
@@ -70,17 +72,16 @@ class FirestoreService {
       if (!snapshot.exists) return;
       final data = snapshot.data() as Map<String, dynamic>?;
       if (data == null) return;
-      
-      List<String> recentSearches = List<String>.from(data['recentSearches'] ?? []);
+
+      List<String> recentSearches =
+          List<String>.from(data['recentSearches'] ?? []);
       recentSearches.remove(locationId);
       transaction.update(docRef, {'recentSearches': recentSearches});
     });
   }
 
   Future<void> clearAllRecentSearches(String uid) async {
-    await _users.doc(uid).update({
-      'recentSearches': []
-    });
+    await _users.doc(uid).update({'recentSearches': []});
   }
 
   Future<void> saveLocation(String uid, String locationId) async {
@@ -110,28 +111,32 @@ class FirestoreService {
   Future<BuildingModel?> getBuilding(String id) async {
     final doc = await _buildings.doc(id).get();
     if (doc.exists) {
-      return BuildingModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return BuildingModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }
     return null;
   }
 
   Stream<BuildingModel> streamBuilding(String id) {
     return _buildings.doc(id).snapshots().map((doc) {
-      return BuildingModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return BuildingModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     });
   }
 
   Future<List<BuildingModel>> getAllBuildings() async {
     final snapshot = await _buildings.get();
     return snapshot.docs.map((doc) {
-      return BuildingModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return BuildingModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }).toList();
   }
 
   Stream<List<BuildingModel>> streamAllBuildings() {
     return _buildings.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
-        return BuildingModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        return BuildingModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -145,7 +150,8 @@ class FirestoreService {
   Future<FacultyModel?> getFaculty(String id) async {
     final doc = await _faculties.doc(id).get();
     if (doc.exists) {
-      return FacultyModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return FacultyModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }
     return null;
   }
@@ -156,7 +162,8 @@ class FirestoreService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return FacultyModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        return FacultyModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -164,7 +171,8 @@ class FirestoreService {
   Stream<List<FacultyModel>> streamAllFaculties() {
     return _faculties.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
-        return FacultyModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        return FacultyModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -189,7 +197,8 @@ class FirestoreService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return LabModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        return LabModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -197,7 +206,8 @@ class FirestoreService {
   Stream<List<LabModel>> streamAllLabs() {
     return _labs.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
-        return LabModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        return LabModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -211,7 +221,8 @@ class FirestoreService {
   Future<HallModel?> getHall(String id) async {
     final doc = await _halls.doc(id).get();
     if (doc.exists) {
-      return HallModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return HallModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }
     return null;
   }
@@ -222,7 +233,8 @@ class FirestoreService {
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return HallModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        return HallModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -230,7 +242,8 @@ class FirestoreService {
   Stream<List<HallModel>> streamAllHalls() {
     return _halls.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
-        return HallModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+        return HallModel.fromFirestore(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     });
   }
@@ -240,7 +253,8 @@ class FirestoreService {
   Future<LocationModel?> getLocation(String id) async {
     final doc = await _locations.doc(id).get();
     if (doc.exists) {
-      return LocationModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return LocationModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }
     return null;
   }
@@ -248,31 +262,30 @@ class FirestoreService {
   Future<List<LocationModel>> searchLocations(String query) async {
     // Convert query to lowercase for case-insensitive search
     final searchQuery = query.toLowerCase();
-    
+
     // Get all locations that match the query in name or tags
-    final snapshot = await _locations
-        .where('isActive', isEqualTo: true)
-        .get();
-    
+    final snapshot = await _locations.where('isActive', isEqualTo: true).get();
+
     // Filter in memory (Firestore doesn't support text search natively)
     final results = snapshot.docs.where((doc) {
       final data = doc.data() as Map<String, dynamic>;
       final name = (data['name'] ?? '').toString().toLowerCase();
       final tags = List<String>.from(data['tags'] ?? []);
-      
+
       return name.contains(searchQuery) ||
           tags.any((tag) => tag.toLowerCase().contains(searchQuery));
     }).map((doc) {
-      return LocationModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return LocationModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }).toList();
-    
+
     return results;
   }
 
   Future<void> incrementSearchCount(String locationId) async {
-    await _locations.doc(locationId).update({
-      'searchCount': FieldValue.increment(1)
-    });
+    await _locations
+        .doc(locationId)
+        .update({'searchCount': FieldValue.increment(1)});
   }
 
   Future<List<LocationModel>> getPopularLocations({int limit = 10}) async {
@@ -283,10 +296,15 @@ class FirestoreService {
           .orderBy('searchCount', descending: true)
           .limit(limit + 10)
           .get();
-      
-      return snapshot.docs.map((doc) {
-        return LocationModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
-      }).where((loc) => loc.isActive).take(limit).toList();
+
+      return snapshot.docs
+          .map((doc) {
+            return LocationModel.fromFirestore(
+                doc.data() as Map<String, dynamic>, doc.id);
+          })
+          .where((loc) => loc.isActive)
+          .take(limit)
+          .toList();
     } catch (e) {
       // Fallback in case of any permissions or index issues
       print('Error fetching popular locations: $e');
@@ -296,17 +314,18 @@ class FirestoreService {
 
   Future<List<LocationModel>> getLocationsByIds(List<String> ids) async {
     if (ids.isEmpty) return [];
-    
+
     // Firestore 'whereIn' limits to 10 items.
     final limitedIds = ids.take(10).toList();
-    
+
     final snapshot = await _locations
         .where(FieldPath.documentId, whereIn: limitedIds)
         .where('isActive', isEqualTo: true)
         .get();
-        
+
     return snapshot.docs.map((doc) {
-      return LocationModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      return LocationModel.fromFirestore(
+          doc.data() as Map<String, dynamic>, doc.id);
     }).toList();
   }
 
@@ -324,9 +343,10 @@ class FirestoreService {
     return dataUri;
   }
 
-  Future<void> saveFloorMapData(String buildingId, int floor, FloorModel floorData) async {
-    // Generate an ID for the floor document, e.g., 'buildingId_floorNumber'
-    final docId = '${buildingId}_$floor';
+  Future<void> saveFloorMapData(
+      String buildingId, int floor, FloorModel floorData) async {
+    // Generate an ID for the floor document, e.g., 'buildingId_floor_floorNumber'
+    final docId = '${buildingId}_floor_$floor';
     await _floors.doc(docId).set(floorData.toFirestore());
   }
 
@@ -348,10 +368,23 @@ class FirestoreService {
     return null;
   }
 
+  // ========== INDOOR GRAPH OPERATIONS ==========
+
+  /// Fetches an [IndoorGraph] from the `IndoorGraphs` collection.
+  /// Document ID format: `{buildingId}_floor_{floorNo}` (e.g. `B3_floor_0`).
+  Future<IndoorGraph?> getIndoorGraph(String buildingId, int floorNo) async {
+    final docId = '${buildingId}_floor_$floorNo';
+    final doc = await _firestore.collection('IndoorGraphs').doc(docId).get();
+    if (doc.exists && doc.data() != null) {
+      return IndoorGraph.fromFirestore(doc.data()!);
+    }
+    return null;
+  }
+
   // ========== ROUTE OPERATIONS ==========
 
-  Future<RouteModel?> getRoute(
-      String buildingId, int floorNumber, String fromLocation, String toLocation) async {
+  Future<RouteModel?> getRoute(String buildingId, int floorNumber,
+      String fromLocation, String toLocation) async {
     final querySnapshot = await _firestore
         .collection('routes')
         .where('buildingId', isEqualTo: buildingId)
@@ -365,7 +398,7 @@ class FirestoreService {
       final doc = querySnapshot.docs.first;
       return RouteModel.fromFirestore(doc.data(), doc.id);
     }
-    
+
     return null;
   }
 }

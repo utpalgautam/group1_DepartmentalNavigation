@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../models/floor_model.dart';
-import '../../models/route_model.dart';
 import '../../models/location_model.dart';
 import '../../services/firestore_service.dart';
-import '../../core/constants/colors.dart';
+import '../../services/astar_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/navigation_provider.dart';
 
@@ -30,18 +29,19 @@ class IndoorNavigationScreen extends StatefulWidget {
 
 class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  
+
   bool _isLoading = true;
   int _currentFloor = 0;
   FloorModel? _currentFloorData;
-  RouteModel? _currentRoute;
+  IndoorGraph? _currentGraph;
+  List<GraphNode> _currentPath = [];
   LocationModel? _destination;
-  
-  bool _showInstructionPanel = true;
+
   String _currentInstruction = 'Loading route...';
-  
-  // To handle the two-phase routing if destination is not on floor 0
+  String? _errorMessage;
+
   bool _isNavigatingToStairs = false;
+  bool _isDebugMode = false;
 
   @override
   void initState() {
@@ -50,23 +50,41 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
     _loadNavigationData();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   Future<void> _loadNavigationData() async {
-    setState(() => _isLoading = true);
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
-      // 1. Fetch destination details to know its floor and room number
       if (widget.destinationLocationId != null) {
-        _destination = await _firestoreService.getLocation(widget.destinationLocationId!);
+        _destination =
+            await _firestoreService.getLocation(widget.destinationLocationId!);
       }
 
-      // 2. Fetch Floor Map Data
-      _currentFloorData = await _firestoreService.getFloorMap(widget.buildingId, _currentFloor);
-      
-      // 3. Determine Routing Phase
-      await _calculateRoute();
-      
-    } catch (e) {
+      _currentFloorData =
+          await _firestoreService.getFloorMap(widget.buildingId, _currentFloor);
+
+      _currentGraph = await _firestoreService.getIndoorGraph(
+          widget.buildingId, _currentFloor);
+
+      if (_currentGraph == null) {
+        _errorMessage = 'Indoor navigation unavailable for this floor.';
+        _currentInstruction = _errorMessage!;
+      } else {
+        await _calculateRoute();
+      }
+    } catch (e, stack) {
       debugPrint('Error loading indoor nav data: $e');
+      debugPrint('Stack trace: $stack');
+      _errorMessage = 'Failed to load navigation data: $e';
+      _currentInstruction = 'Failed to load navigation data.';
     }
 
     if (mounted) {
@@ -75,471 +93,393 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
   }
 
   Future<void> _calculateRoute() async {
-    _currentRoute = null; // reset
+    _currentPath = [];
     if (_destination == null) {
-       _currentInstruction = 'Destination not found.';
-       return;
+      _currentInstruction = 'Destination not found.';
+      return;
     }
-    
-    final int destFloor = _destination?.floor ?? 0;
-    
-    // For this example, we mock the route payload. Real app would query a 'routes' collection.
-    
-    if (_currentFloor == 0 && destFloor > 0) {
-       // Phase 1: Go to Stairs (Current floor is 0, destination is higher)
-       _isNavigatingToStairs = true;
-       _currentInstruction = 'Follow the path to reach stairs\nand change floor to Floor $destFloor';
-       
-       final route = await _firestoreService.getRoute(
-         widget.buildingId, 0, widget.entryPointId, 'stairs'
-       );
-       _currentRoute = route ?? _mockRouteToStairs(); 
-       
-    } else if (_currentFloor == destFloor && destFloor > 0) {
-       // Phase 2: On Destination Floor
-       _isNavigatingToStairs = false;
-       final toLocation = _destination!.roomNumber ?? _destination!.name;
-       _currentInstruction = 'Follow the path\nto Destination';
-       
-       final route = await _firestoreService.getRoute(
-         widget.buildingId, destFloor, 'stairs', toLocation
-       );
-       _currentRoute = route ?? _mockRouteToRoom('stairs', toLocation);
-       
-    } else if (destFloor == 0) {
-       // Phase 3: Destination is on Floor 0
-       _isNavigatingToStairs = false;
-       final toLocation = _destination!.roomNumber ?? _destination!.name;
-       _currentInstruction = 'Follow the path\nto Destination';
-       
-       final route = await _firestoreService.getRoute(
-         widget.buildingId, 0, widget.entryPointId, toLocation
-       );
-       _currentRoute = route ?? _mockRouteToRoom(widget.entryPointId, toLocation);
-       
+
+    if (_currentGraph == null) {
+      _currentInstruction = 'Indoor navigation unavailable for this floor.';
+      return;
+    }
+
+    final int targetFloor = _destination?.floor ?? 0;
+    final IndoorGraph graph = _currentGraph!;
+    final String entryLabel = widget.entryPointId; 
+    final String roomLabel = _destination!.roomNumber ?? _destination!.name;
+
+    if (_currentFloor != targetFloor) {
+      // Phase 1: Entry -> Stairs
+      _isNavigatingToStairs = true;
+      
+      // The user's snippet: const path = runAStar(graph, entryLabel, "Stairs");
+      _currentPath = AStarService.findPath(graph, entryLabel, "Stairs");
+      
+      if (_currentPath.isEmpty) {
+        // Fallback for Entry if label matching fails
+        _currentPath = AStarService.findPath(graph, "Stairs", "Stairs"); // This is just to check if Stairs exist
+        if (_currentPath.isEmpty) {
+           _currentInstruction = 'Route to stairs not found.';
+        } else {
+           _currentInstruction = 'Route from $entryLabel to stairs not found.';
+        }
+      } else {
+        _currentInstruction = 'Follow route to stairs and change floor to Floor $targetFloor';
+      }
     } else {
-       _currentInstruction = 'Floor mismatch.';
+      // Phase 2: Stairs -> Room (or Entry -> Room if no stairs needed)
+      _isNavigatingToStairs = false;
+
+      // If we are on the target floor, we might have started from stairs or from entry
+      // If we just came from stairs, start node should be "Stairs"
+      // If we are starting from entry on the same floor, start node is entryLabel
+      // Let's check if "Stairs" is a better starting point if we are in Phase 2 after a floor change
+      
+      String startLabel = entryLabel;
+      // Heuristic to check if we should start from stairs: if we are on target floor and it's not the original floor
+      if (_currentFloor != widget.floor) {
+        startLabel = "Stairs";
+      }
+
+      _currentPath = AStarService.findPath(graph, startLabel, roomLabel);
+      
+      if (_currentPath.isEmpty && startLabel == "Stairs") {
+        // Fallback to entry label if stairs path fails (maybe entry point is on this floor)
+        _currentPath = AStarService.findPath(graph, entryLabel, roomLabel);
+      }
+
+      if (_currentPath.isEmpty) {
+        _currentInstruction = 'Route to $roomLabel not found.';
+      } else {
+        _currentInstruction = 'Follow the path to reach $roomLabel';
+      }
     }
   }
-  
+
   void _onReachedWaypoint() {
-      if (_isNavigatingToStairs) {
-         // Show confirmation, then switch floor
-         _showStairDialog();
-      } else {
-         // Arrived at destination
-         _showArrivalDialog();
-      }
+    if (_isNavigatingToStairs) {
+      _showStairDialog();
+    } else {
+      _showArrivalDialog();
+    }
   }
 
   void _showStairDialog() {
-       showDialog(
-         context: context,
-         barrierDismissible: false,
-         builder: (context) => AlertDialog(
-            title: const Text('Reached Stairs'),
-            content: Text('Please confirm if you have reached target Floor ${_destination?.floor}.'),
-            actions: [
-               TextButton(
-                  onPressed: () {
-                     Navigator.pop(context);
-                     _switchFloor(_destination?.floor ?? 0);
-                  },
-                  child: const Text('Confirm target floor')
-               )
-            ]
-         )
-       );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Change Floor', style: TextStyle(color: Colors.white)),
+        content: Text('Please go to Floor ${_destination?.floor}.',
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _switchFloor(_destination?.floor ?? 0);
+            },
+            child: const Text('I am on the new floor',
+                style: TextStyle(color: Colors.blue)),
+          )
+        ],
+      ),
+    );
   }
 
   void _showArrivalDialog() {
-       showDialog(
-         context: context,
-         barrierDismissible: false,
-         builder: (context) => AlertDialog(
-            title: const Text('Completed Navigation'),
-            content: Text('You have reached ${_destination?.name}.'),
-            actions: [
-               TextButton(
-                  onPressed: () {
-                     Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
-                     Navigator.pop(context); // close dialog
-                     Navigator.pop(context); // close nav screen
-                  },
-                  child: const Text('Finish Navigation')
-               )
-            ]
-         )
-       );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Destination Reached',
+            style: TextStyle(color: Colors.white)),
+        content: Text('You have arrived at ${_destination?.name}.',
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Provider.of<NavigationProvider>(context, listen: false)
+                  .stopNavigation();
+              Navigator.pop(context); // close dialog
+              Navigator.pop(context); // close nav screen
+            },
+            child: const Text('Finish', style: TextStyle(color: Colors.blue)),
+          )
+        ],
+      ),
+    );
   }
 
   void _switchFloor(int newFloor) {
-      setState(() {
-          _currentFloor = newFloor;
-      });
-      _loadNavigationData();
+    setState(() {
+      _currentFloor = newFloor;
+    });
+    _loadNavigationData();
+  }
+
+  String _getProcessedSvg() {
+    if (_currentFloorData == null || (_currentFloorData!.svgMapData == null && _currentFloorData!.svgMapUrl == null)) {
+      return '';
+    }
+
+    String svg = _currentFloorData!.svgMapData ?? '';
+    if (svg.isEmpty) return '';
+
+    final vb = _currentGraph?.viewBox ?? [0.0, 0.0, 800.0, 600.0];
+    final double mapWidth = (vb.length > 2 && vb[2] > 0) ? vb[2] : 800.0;
+    final double mapHeight = (vb.length > 3 && vb[3] > 0) ? vb[3] : 600.0;
+    String viewBoxStr = '${vb.isNotEmpty ? vb[0] : 0.0} ${vb.length > 1 ? vb[1] : 0.0} $mapWidth $mapHeight';
+
+    // Ensure svg tag has the correct viewBox and remove width/height to let it scale in container
+    svg = svg.replaceFirst(RegExp(r'<svg[^>]*>'), '<svg viewBox="$viewBoxStr" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">');
+
+    StringBuffer overlays = StringBuffer();
+
+    // Add Route
+    if (_currentPath.isNotEmpty) {
+      String points = _currentPath.map((p) => '${p.x},${p.y}').join(' ');
+      overlays.write('<polyline points="$points" stroke="blue" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" />');
+      
+      // Add Destination Marker in SVG
+      final dest = _currentPath.last;
+      overlays.write('<circle cx="${dest.x}" cy="${dest.y}" r="8" fill="red" />');
+
+      // Add Start (User) Marker in SVG
+      final start = _currentPath.first;
+      overlays.write('<circle cx="${start.x}" cy="${start.y}" r="8" fill="green" />');
+    }
+
+    // Add Debug Nodes
+    if (_isDebugMode && _currentGraph != null) {
+      for (var node in _currentGraph!.nodes) {
+        overlays.write('<circle cx="${node.x}" cy="${node.y}" r="4" fill="red" fill-opacity="0.6" />');
+      }
+    }
+
+    // Inject before closing svg tag
+    return svg.replaceFirst('</svg>', '${overlays.toString()}</svg>');
   }
 
   @override
   Widget build(BuildContext context) {
-    String floorName = _currentFloor == 0 ? 'Ground' : 'Floor $_currentFloor';
-    
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // Light grey background like mockup
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : SafeArea(
-            bottom: false,
-            child: Stack(
-              children: [
-                // Interactive Floor Map Card
-                Positioned(
-                  top: 100,
-                  left: 16,
-                  right: 16,
-                  bottom: 180, // Space for bottom controls
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: _buildInteractiveMap(),
-                    ),
+      backgroundColor: Colors.white,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.blue))
+          : SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: _buildMapView(),
                   ),
-                ),
-                
-                // Header Pane
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  child: _buildHeaderWidget(floorName),
-                ),
-                  
-                // Bottom Controls Pane
-                Positioned(
-                  bottom: 0,
-                  left: 0, 
-                  right: 0,
-                  child: _buildBottomControlsWidget(),
-                )
-              ],
-            ),
-          ),
-    );
-  }
-
-  Widget _buildInteractiveMap() {
-    return InteractiveViewer(
-      boundaryMargin: const EdgeInsets.all(100),
-      minScale: 0.5,
-      maxScale: 3.0,
-      child: Center(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // 1. The Floor Map Image/SVG
-            if (_currentFloorData?.svgMapData != null)
-               SvgPicture.string(_currentFloorData!.svgMapData!, width: 300, height: 400)
-            else if (_currentFloorData?.svgMapUrl != null)
-               SvgPicture.network(_currentFloorData!.svgMapUrl!, width: 300, height: 400)
-            else if (_currentFloorData?.mapImageUrl != null)
-               Image.network(_currentFloorData!.mapImageUrl!, width: 300, height: 400, fit: BoxFit.contain)
-            else 
-               Container(
-                  width: 300, height: 400,
-                  decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                  child: Center(child: Text('Map for Floor $_currentFloor not available')),
-               ),
-
-            // 2. POIs Overlay
-            if (_currentFloorData != null && _currentFloorData!.pois.isNotEmpty)
-              Positioned.fill(
-                child: CustomPaint(
-                  size: const Size(300, 400),
-                  painter: _POIPainter(pois: _currentFloorData!.pois),
-                ),
+                  _buildBottomPanel(),
+                ],
               ),
-
-            // 3. The Route Overlay
-            if (_currentRoute != null)
-               CustomPaint(
-                  size: const Size(300, 400), // Should match map dimensions
-                  painter: _RoutePainter(_currentRoute!.points),
-               ),
-          ],
-        ),
-      ),
+            ),
     );
   }
 
-  Widget _buildHeaderWidget(String floorName) {
-     return Container(
-         padding: const EdgeInsets.all(16),
-         decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
-         ),
-         child: Row(
-            children: [
-               GestureDetector(
-                onTap: () {
-                   Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
-                   Navigator.pop(context);
-                },
-                 child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                       color: Colors.black,
-                       borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.turn_left, color: Colors.white),
-                 ),
-               ),
-               const SizedBox(width: 16),
-               Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$floorName Floor ${widget.buildingName}',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                      Text(
-                         _currentInstruction.replaceAll('\n', ' '),
-                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                         maxLines: 2,
-                         overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  )
-               ),
-               IconButton(
-                 style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFFEEEEEE),
-                    shape: const CircleBorder(),
-                 ),
-                 icon: const Icon(Icons.close, color: Colors.black),
-                 onPressed: () {
-                    Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
-                    Navigator.pop(context);
-                 },
-               ),
-            ],
-         ),
-     );
-  }
-
-  Widget _buildBottomControlsWidget() {
+  Widget _buildHeader() {
+    String floorName = _currentFloor == 0 ? 'Ground' : 'Floor $_currentFloor';
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
-            blurRadius: 20,
-            offset: Offset(0, -5),
-          ),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          )
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                _isNavigatingToStairs ? '13m ahead' : '35m ahead',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Flow Blue line',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _isNavigatingToStairs ? 'Floor Change\nNeeded' : 'To reach\nDestination.',
-                    textAlign: TextAlign.right,
+                    widget.buildingName,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                  ),
+                  Text(
+                    floorName,
+                    style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      _isDebugMode ? Icons.bug_report : Icons.bug_report_outlined,
+                      color: _isDebugMode ? Colors.red : Colors.grey,
+                    ),
+                    onPressed: () => setState(() => _isDebugMode = !_isDebugMode),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child:
+                          const Icon(Icons.close, color: Colors.black, size: 20),
                     ),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _onReachedWaypoint,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: const Text('Confirm', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Provider.of<NavigationProvider>(context, listen: false).stopNavigation();
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: const Text('Exit Navigation', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-            ],
+          const SizedBox(height: 12),
+          Text(
+            _isDebugMode && _errorMessage != null ? _errorMessage! : _currentInstruction,
+            style: TextStyle(
+                color: _isDebugMode && _errorMessage != null ? Colors.red : Colors.black87,
+                fontSize: 15,
+                fontWeight: _isDebugMode && _errorMessage != null ? FontWeight.bold : FontWeight.normal),
           ),
         ],
       ),
     );
   }
 
-  // ---- MOCK DATA GENERATORS FOR TESTING ----
-  RouteModel _mockRouteToStairs() {
-     return RouteModel(
-        id: 'r_stairs',
-        fromLocation: widget.entryPointId,
-        toLocation: 'stairs',
-        points: const [
-           RoutePoint(x: 50, y: 350),
-           RoutePoint(x: 100, y: 350),
-           RoutePoint(x: 100, y: 200),
-           RoutePoint(x: 250, y: 200),
-        ]
-     );
-  }
-
-  RouteModel _mockRouteToRoom(String from, String to) {
-     return RouteModel(
-        id: 'r_room',
-        fromLocation: from,
-        toLocation: to,
-        points: const [
-           RoutePoint(x: 250, y: 200), // Stairs position
-           RoutePoint(x: 250, y: 100),
-           RoutePoint(x: 150, y: 100),
-           RoutePoint(x: 150, y: 50),
-        ]
-     );
-  }
-}
-
-class _RoutePainter extends CustomPainter {
-  final List<RoutePoint> points;
-  _RoutePainter(this.points);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-
-    final paint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 4.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
-
-    final path = Path();
-    path.moveTo(points.first.x, points.first.y);
-    for (int i = 1; i < points.length; i++) {
-       path.lineTo(points[i].x, points[i].y);
+  Widget _buildMapView() {
+    final processedSvg = _getProcessedSvg();
+    if (processedSvg.isEmpty) {
+      return Center(
+        child: Text(
+          'Map data missing for Floor $_currentFloor',
+          style: const TextStyle(color: Colors.black54),
+        ),
+      );
     }
 
-    canvas.drawPath(path, paint);
+    final vb = _currentGraph?.viewBox ?? [0.0, 0.0, 800.0, 600.0];
+    final double vbWidth = (vb.length > 2 && vb[2] > 0) ? vb[2] : 800.0;
+    final double vbHeight = (vb.length > 3 && vb[3] > 0) ? vb[3] : 600.0;
 
-    // Draw End Marker
-    final markerPaint = Paint()..color = Colors.red..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(points.last.x, points.last.y), 6.0, markerPaint);
-    
-    // Draw Start Marker
-    final startPaint = Paint()..color = Colors.green..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(points.first.x, points.first.y), 6.0, startPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class _POIPainter extends CustomPainter {
-  final List<POI> pois;
-
-  _POIPainter({required this.pois});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final pointPaint = Paint()
-      ..color = Colors.blue
-      ..style = PaintingStyle.fill;
-
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    const textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 8,
-      fontWeight: FontWeight.bold,
-      backgroundColor: Colors.white70,
+    return InteractiveViewer(
+      minScale: 0.5,
+      maxScale: 5.0,
+      child: Center(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                spreadRadius: 5,
+              )
+            ],
+          ),
+          child: AspectRatio(
+            aspectRatio: vbWidth / vbHeight,
+            child: SvgPicture.string(
+              processedSvg,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
     );
-
-    for (final poi in pois) {
-      final offset = Offset(poi.x * size.width, poi.y * size.height);
-      
-      // Draw point
-      canvas.drawCircle(offset, 4.0, pointPaint);
-      canvas.drawCircle(offset, 4.0, borderPaint);
-
-      // Draw label
-      final textPainter = TextPainter(
-        text: TextSpan(text: poi.name, style: textStyle),
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      
-      // Position label slightly above the point
-      textPainter.paint(
-        canvas,
-        Offset(offset.dx - (textPainter.width / 2), offset.dy - 12),
-      );
-    }
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  Widget _buildBottomPanel() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          )
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.directions_walk, color: Colors.blue),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isNavigatingToStairs ? 'Phase 1' : 'Final Phase',
+                      style: const TextStyle(color: Colors.black54, fontSize: 12),
+                    ),
+                    Text(
+                      _isNavigatingToStairs
+                          ? 'Navigate to Stairs'
+                          : 'Navigate to Destination',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _onReachedWaypoint,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Confirm Reached',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

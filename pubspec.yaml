@@ -15,7 +15,7 @@ dependencies:
   cloud_firestore: ^5.4.4
   
   # Maps & Navigation
-  maplibre_gl: ^0.25.0  # For vector map rendering
+  maplibre_gl: 0.22.0  # For vector map rendering
   http: ^1.1.0          # For API calls to GraphHopper
   geolocator: ^10.1.0   # For device location
   geocoding: ^2.1.1     # For address lookup

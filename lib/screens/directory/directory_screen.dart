@@ -7,7 +7,7 @@ import '../../models/location_model.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../home/home_screen.dart';
-import '../home/search_screen.dart';
+import '../navigation/indoor_navigation_setup_screen.dart';
 import '../map/offline_maps_screen.dart';
 import '../profile/profile_screen.dart';
 import '../navigation/outdoor_navigation_screen.dart';
@@ -65,7 +65,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           context, MaterialPageRoute(builder: (_) => const HomeScreen()));
     } else if (index == 2) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const SearchScreen()));
+          context,
+          MaterialPageRoute(
+              builder: (_) => const IndoorNavigationSetupScreen()));
     } else if (index == 3) {
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (_) => const OfflineMapsScreen()));
@@ -619,7 +621,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       future: _getLocationFuture(locationId),
       builder: (context, snapshot) {
         final location = snapshot.data;
-
         final roomLabel = location?.roomNumber ?? 'TBA';
         final floorLabel =
             location?.floor != null ? 'Floor ${location!.floor}' : 'TBA';
@@ -798,43 +799,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           );
 
           final location = await _firestoreService.getLocation(locationId);
-          if (location != null && location.buildingId != null) {
+          if (location != null && location.buildingId != null && mounted) {
             final building =
                 await _firestoreService.getBuilding(location.buildingId!);
 
-            navigator.pop(); // Close loading dialog
-            if (building != null && building.entryPoints.isNotEmpty) {
-              final entryPoint =
-                  building.entryPoints.first; // Default to first entry point
-              navigator.push(
-                MaterialPageRoute(
-                  builder: (_) => OutdoorNavigationScreen(
-                    targetBuilding: building,
-                    targetEntryPoint: entryPoint,
-                    destinationId: location.id,
-                    destinationName: location.name,
-                    destLat: entryPoint.latitude,
-                    destLng: entryPoint.longitude,
+            if (mounted) {
+              Navigator.pop(context); // Close loading dialog
+              if (building != null && building.entryPoints.isNotEmpty) {
+                final entryPoint =
+                    building.entryPoints.first; // Default to first entry point
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OutdoorNavigationScreen(
+                      targetBuilding: building,
+                      targetEntryPoint: entryPoint,
+                      destinationId: location.id,
+                      destinationName: location.name,
+                      destLat: entryPoint.latitude,
+                      destLng: entryPoint.longitude,
+                    ),
                   ),
-                ),
-              );
-            } else {
-              scaffoldMessenger.showSnackBar(
-                const SnackBar(
-                    content: Text('Building or entry point data not found.')),
-              );
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Building or entry point data not found.')),
+                );
+              }
             }
           } else {
-            navigator.pop(); // Close loading dialog
-            scaffoldMessenger.showSnackBar(
-              const SnackBar(content: Text('Location data not found.')),
-            );
+            if (mounted) {
+              Navigator.pop(context); // Close loading dialog
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Location data not found.')),
+              );
+            }
           }
         } catch (e) {
-          navigator.pop(); // Close loading dialog
-          scaffoldMessenger.showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
+          if (mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: $e')),
+            );
+          }
         }
       },
       child: Container(
