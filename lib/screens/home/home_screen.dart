@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               // Content starts after the search bar (searchH/2 + a gap)
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 48, 20, 100),
+                padding: const EdgeInsets.fromLTRB(20, 28, 20, 100),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
