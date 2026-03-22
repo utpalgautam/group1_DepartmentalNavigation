@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
 import '../../core/constants/colors.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../services/firestore_service.dart';
 import '../../models/location_model.dart';
 import '../../models/building_model.dart';
+import '../../models/search_log_model.dart';
 import '../../providers/auth_provider.dart' as app_auth;
-import '../../widgets/bottom_nav_bar.dart';
-import '../directory/directory_screen.dart';
 import '../home/home_screen.dart';
-import '../map/offline_maps_screen.dart';
-import '../profile/profile_screen.dart';
 import '../navigation/outdoor_navigation_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -113,6 +112,22 @@ class _SearchScreenState extends State<SearchScreen> {
        if (location.buildingId != null) {
           final building = await _firestoreService.getBuilding(location.buildingId!);
           
+          // Log search for analytics
+          if (building != null) {
+            final String platform = kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : 'ios');
+            final String searchQuery = _searchController.text.isNotEmpty 
+                ? _searchController.text 
+                : location.name;
+
+            await _firestoreService.logSearch(SearchLogModel(
+              buildingId: building.id,
+              buildingName: building.name,
+              platform: platform,
+              query: searchQuery,
+              timestamp: DateTime.now(),
+            ));
+          }
+          
           if (mounted) {
             Navigator.pop(context); // Close loading dialog
             if (building != null && building.entryPoints.isNotEmpty) {
@@ -151,20 +166,6 @@ class _SearchScreenState extends State<SearchScreen> {
              SnackBar(content: Text('Error: $e')),
           );
         }
-    }
-  }
-
-  void _onNavItemTapped(int index) {
-    if (index == 2) return;
-
-    if (index == 0) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-    } else if (index == 1) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DirectoryScreen()));
-    } else if (index == 3) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OfflineMapsScreen()));
-    } else if (index == 4) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
     }
   }
 
@@ -258,18 +259,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         ? _buildSearchResults()
                         : _buildDefaultView(),
               ),
-              const SizedBox(height: 100), // padding for navbar
             ],
           ),
-        ),
-      ),
-      Positioned(
-        bottom: 30,
-        left: 24,
-        right: 24,
-        child: CustomBottomNavBar(
-          currentIndex: 2,
-          onTap: _onNavItemTapped,
         ),
       ),
     ],

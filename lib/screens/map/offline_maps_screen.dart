@@ -8,6 +8,7 @@ import '../directory/directory_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../home/search_screen.dart';
+import '../navigation/indoor_navigation_setup_screen.dart';
 import 'explore_map_screen.dart';
 import 'offline_floor_map_screen.dart';
 
@@ -99,7 +100,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
           context, MaterialPageRoute(builder: (_) => const DirectoryScreen()));
     } else if (index == 2) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const SearchScreen()));
+          context, MaterialPageRoute(builder: (_) => const IndoorNavigationSetupScreen()));
     } else if (index == 4) {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
