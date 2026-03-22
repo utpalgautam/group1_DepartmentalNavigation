@@ -626,7 +626,7 @@ class _AnimatedFocusTextFieldState extends State<_AnimatedFocusTextField> {
             decoration: InputDecoration(
               hintText: widget.hintText,
               hintStyle: const TextStyle(
-                color: Color(0xFFB0B0B0),
+                color: Color(0xFF9E9E9E),
                 fontSize: 15,
                 fontWeight: FontWeight.w400,
               ),
