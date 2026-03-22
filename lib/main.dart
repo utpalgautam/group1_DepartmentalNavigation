@@ -88,9 +88,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     // Still checking SharedPreferences
     if (_isCheckingOnboarding) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const _SplashScreen();
     }
 
     // First-time user → show onboarding
@@ -102,9 +100,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final auth = context.watch<app_auth.AuthProvider>();
 
     if (!auth.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const _SplashScreen();
     }
 
     if (auth.isAuthenticated) {
@@ -141,5 +137,85 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     return const LoginScreen();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Branded splash — shown while SharedPreferences / Firebase auth is loading.
+// ─────────────────────────────────────────────────────────────────────────────
+class _SplashScreen extends StatefulWidget {
+  const _SplashScreen();
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF1A1A1A),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.directions_walk_rounded,
+                color: Colors.black,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 24),
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (_, __) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(3, (i) {
+                    final delay = i / 3.0;
+                    final phase = (_controller.value - delay).clamp(0.0, 1.0);
+                    final opacity = 0.3 + 0.7 * phase;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: opacity),
+                      ),
+                    );
+                  }),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
