@@ -256,15 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               
               // --- Log Out Button ---
               GestureDetector(
-                onTap: () async {
-                  await auth.logout();
-                  if (mounted) {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const AuthWrapper()),
-                      (route) => false,
-                    );
-                  }
-                },
+                onTap: () => _showLogoutDialog(context, auth),
                 child: const Center(
                   child: Text(
                     'Log Out',
@@ -292,7 +284,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     ],
   ),
-);
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, app_auth.AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Log Out?', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text('Are you sure you want to log out of your account?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                await auth.logout();
+                if (mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                    (route) => false,
+                  );
+                }
+              },
+              child: const Text('Log Out', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildProfileHeader(String name, String subtitle) {
