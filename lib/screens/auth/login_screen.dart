@@ -130,18 +130,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       
                       const SizedBox(height: 24),
 
-                      // Google Sign In Button (Reduced size)
+                      // Google Sign In Button
                       _ScaleButton(
-                        onTap: () async {
-                          final auth = context.read<app_auth.AuthProvider>();
-                          final ok = await auth.signInWithGoogle();
+                        onTap: auth.isLoading ? null : () async {
+                          final appAuth = context.read<app_auth.AuthProvider>();
+                          final ok = await appAuth.signInWithGoogle();
                           if (ok) {
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setBool('remember_me', _rememberMe);
                           } else if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(auth.errorMessage ?? 'Google Sign-In failed'),
+                                content: Text(appAuth.errorMessage ?? 'Google Sign-In failed'),
                                 backgroundColor: Colors.redAccent,
                               ),
                             );

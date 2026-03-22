@@ -9,11 +9,10 @@ class ExploreMapScreen extends StatefulWidget {
 }
 
 class _ExploreMapScreenState extends State<ExploreMapScreen> {
-  MaplibreMapController? _mapController;
   bool _isMapReady = false;
 
   void _onMapCreated(MaplibreMapController controller) {
-    _mapController = controller;
+    // Keep reference if needed later
   }
 
   void _onStyleLoaded() {

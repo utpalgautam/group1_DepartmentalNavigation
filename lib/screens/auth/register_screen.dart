@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart' as app_auth;
+import '../../services/auth_service.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/primary_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,6 +28,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   UserType _selectedType = UserType.student;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+
+  // Live validation state
+  String _passwordValue = '';
+  String _confirmValue = '';
+
+  bool get _passwordStrengthOk =>
+      AuthService.validatePasswordStrength(_passwordValue) == null;
+  bool get _confirmMatch =>
+      _confirmValue.isNotEmpty && _confirmValue == _passwordValue;
 
   static const _userTypes = [
     UserType.student,
@@ -220,32 +230,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Password
                 CustomTextField(
                   label: 'Password',
-                  hintText: '********',
+                  hintText: '••••••••',
                   controller: _passwordCtrl,
                   isPassword: true,
                   isVisible: !_obscurePassword,
-                  onVisibilityToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+                  onVisibilityToggle: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                  onChanged: (v) => setState(() => _passwordValue = v),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 6) return 'Minimum 6 characters';
-                    return null;
+                    return AuthService.validatePasswordStrength(v);
                   },
                 ),
+                const SizedBox(height: 8),
+
+                // ── Real-time password strength hints ────────────────────
+                _PasswordStrengthHints(password: _passwordValue),
                 const SizedBox(height: 16),
 
                 // Confirm Password
                 CustomTextField(
                   label: 'Confirm Password',
-                  hintText: '********',
+                  hintText: '••••••••',
                   controller: _confirmCtrl,
                   isPassword: true,
                   isVisible: !_obscureConfirm,
-                  onVisibilityToggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  onVisibilityToggle: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                  onChanged: (v) => setState(() => _confirmValue = v),
                   validator: (v) {
                     if (v != _passwordCtrl.text) return 'Passwords do not match';
                     return null;
                   },
                 ),
+                const SizedBox(height: 6),
+
+                // ── Confirm match indicator ──────────────────────────────
+                if (_confirmValue.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _confirmMatch
+                              ? Icons.check_circle_rounded
+                              : Icons.cancel_rounded,
+                          size: 15,
+                          color: _confirmMatch
+                              ? const Color(0xFF2ECC71)
+                              : const Color(0xFFE74C3C),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _confirmMatch
+                              ? 'Passwords match'
+                              : 'Passwords do not match',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _confirmMatch
+                                ? const Color(0xFF2ECC71)
+                                : const Color(0xFFE74C3C),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                 // ── Optional: Branch ──────────────────────────────
                 if (_showBranch) ...[
@@ -273,11 +323,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 32),
 
-                // Submit
+                // Submit — disabled until passwords pass all checks
                 PrimaryButton(
                   label: 'Sign Up',
                   isLoading: auth.isLoading,
-                  onTap: _submit,
+                  onTap: (_passwordStrengthOk && _confirmMatch)
+                      ? _submit
+                      : null,
                 ),
                 const SizedBox(height: 32),
 
@@ -422,3 +474,74 @@ class _UserTypeSelector extends StatelessWidget {
   }
 }
 
+// ── Password strength hints widget ────────────────────────────────────────────
+class _PasswordStrengthHints extends StatelessWidget {
+  final String password;
+  const _PasswordStrengthHints({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    final checks = <_PwCheck>[
+      _PwCheck('8+ characters', password.length >= 8),
+      _PwCheck('Uppercase letter', password.contains(RegExp(r'[A-Z]'))),
+      _PwCheck('Lowercase letter', password.contains(RegExp(r'[a-z]'))),
+      _PwCheck('Number', password.contains(RegExp(r'[0-9]'))),
+      _PwCheck(
+        '2 special characters',
+        () {
+          final specials = RegExp(r'[!@#\$%^&*(),.?\":{}|<>_\-+=\[\]\\/`~;]');
+          return password.split('').where((c) => specials.hasMatch(c)).length >= 2;
+        }(),
+      ),
+    ];
+
+    if (password.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      child: Wrap(
+        spacing: 16,
+        runSpacing: 4,
+        children: checks.map((c) => _CheckRow(c)).toList(),
+      ),
+    );
+  }
+}
+
+class _PwCheck {
+  final String label;
+  final bool passed;
+  const _PwCheck(this.label, this.passed);
+}
+
+class _CheckRow extends StatelessWidget {
+  final _PwCheck check;
+  const _CheckRow(this.check);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Icon(
+            check.passed ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+            key: ValueKey<bool>(check.passed),
+            size: 14,
+            color: check.passed ? const Color(0xFF2ECC71) : const Color(0xFFAAAAAA),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          check.label,
+          style: TextStyle(
+            fontSize: 12,
+            color: check.passed ? const Color(0xFF2ECC71) : const Color(0xFF999999),
+            fontWeight: check.passed ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+  }
+}

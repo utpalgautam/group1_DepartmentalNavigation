@@ -25,6 +25,11 @@ void main() async {
 
   // 1. Check onboarding flag BEFORE anything else.
   final prefs = await SharedPreferences.getInstance();
+  
+  // DEV PURPOSES ONLY: We are removing the flag so that your device "forgets" it already saw the onboarding.
+  // This will allow you to see the onboarding page when you start the app.
+  await prefs.remove(kHasSeenOnboarding); 
+  
   final hasSeenOnboarding = prefs.getBool(kHasSeenOnboarding) ?? false;
 
   // 2. Init Firebase (non-blocking for the nav decision).

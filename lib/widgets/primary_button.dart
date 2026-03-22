@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PrimaryButton extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String label;
   final bool isLoading;
   final bool isSecondary;
@@ -23,12 +23,15 @@ class PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: isSecondary ? Colors.white : Colors.black,
           foregroundColor: isSecondary ? Colors.black : Colors.white,
-          elevation: isSecondary ? 0 : 2, // Flatter look for secondary buttons
+          disabledBackgroundColor:
+              (isSecondary ? Colors.white : Colors.black).withValues(alpha: 0.35),
+          disabledForegroundColor: Colors.white54,
+          elevation: isSecondary ? 0 : 2,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Pill shape
+            borderRadius: BorderRadius.circular(30),
           ),
         ),
-        onPressed: isLoading ? null : onTap,
+        onPressed: (isLoading || onTap == null) ? null : onTap,
         child: isLoading
             ? SizedBox(
                 height: 24,
