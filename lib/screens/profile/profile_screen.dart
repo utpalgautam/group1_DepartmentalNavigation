@@ -12,7 +12,6 @@ import '../navigation/indoor_navigation_setup_screen.dart';
 import '../map/offline_maps_screen.dart';
 import 'change_password_screen.dart';
 import 'recent_searches_screen.dart';
-import 'saved_locations_screen.dart';
 import 'edit_details_screen.dart';
 import '../../main.dart';
 import '../../providers/security_provider.dart';
@@ -117,12 +116,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.only(left: 16.0),
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: Colors.black,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.pop(context), // Though usually used in a tab bar, providing a back button
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                }
+              },
             ),
           ),
         ),
@@ -135,31 +143,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               // --- Header (Avatar & Name) ---
               _buildProfileHeader(user?.name ?? 'Guest User', user?.userType?.name ?? 'User'),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
               
               // --- Sections ---
               _buildSectionTitle('Activity'),
               _buildCardContainer([
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SavedLocationsScreen(),
-                      ),
-                    );
-                  },
-                  child: _buildListTile(
-                    title: 'Saved Locations',
-                    icon: Icons.bookmark,
-                    iconColor: Colors.blue[600]!,
-                    iconBgColor: Colors.blue[50]!,
-                  ),
-                ),
-                const Divider(height: 1, indent: 64, endIndent: 0, color: Color(0xFFF0F0F0)),
                 InkWell(
                   onTap: () {
                     Navigator.push(
@@ -177,7 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ]),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               _buildSectionTitle('Security'),
               _buildCardContainer([
@@ -227,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
               ]),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               _buildSectionTitle('Preferences'),
               _buildCardContainer([
@@ -261,19 +252,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Divider(height: 1, indent: 64, endIndent: 0, color: Color(0xFFF0F0F0)),
                 _buildWalkingSpeedRow(),
               ]),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
               
               // --- Log Out Button ---
               GestureDetector(
-                onTap: () async {
-                  await auth.logout();
-                  if (mounted) {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const AuthWrapper()),
-                      (route) => false,
-                    );
-                  }
-                },
+                onTap: () => _showLogoutDialog(context, auth),
                 child: const Center(
                   child: Text(
                     'Log Out',
@@ -285,7 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 120), // Bottom padding for nav bar
+              const SizedBox(height: 80), // Bottom padding for nav bar
             ],
           ),
         ),
@@ -301,7 +284,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     ],
   ),
-);
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, app_auth.AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Log Out?', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text('Are you sure you want to log out of your account?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                await auth.logout();
+                if (mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                    (route) => false,
+                  );
+                }
+              },
+              child: const Text('Log Out', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildProfileHeader(String name, String subtitle) {
@@ -317,8 +332,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           alignment: Alignment.bottomRight,
           children: [
             Container(
-              width: 120,
-              height: 120,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.pastelOrange,
@@ -353,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Text(
           name,
           style: const TextStyle(
@@ -362,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.black,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           subtitle,
           style: const TextStyle(
@@ -371,7 +386,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         GestureDetector(
           onTap: () {
             Navigator.push(
