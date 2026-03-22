@@ -5,6 +5,7 @@ import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart' as app_auth;
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/primary_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -88,6 +89,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (ok) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('remember_me', true);
+      
       messenger.showSnackBar(
         const SnackBar(
           content: Row(

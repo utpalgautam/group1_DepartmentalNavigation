@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -23,10 +24,23 @@ class AuthProvider extends ChangeNotifier {
     _authService.authStateChanges.listen(_onAuthStateChanged);
   }
 
+  bool _firstCheck = true;
+
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
     if (firebaseUser == null) {
       _currentUser = null;
     } else {
+      if (_firstCheck) {
+        final prefs = await SharedPreferences.getInstance();
+        final rememberMe = prefs.getBool('remember_me') ?? true;
+
+        if (!rememberMe) {
+          await _authService.signOut();
+          // The logout will trigger another event with null, so we can just return
+          return;
+        }
+      }
+
       try {
         _currentUser = await _authService.getCurrentUserModel();
       } catch (_) {
@@ -42,6 +56,8 @@ class AuthProvider extends ChangeNotifier {
         );
       }
     }
+    
+    _firstCheck = false;
     _initialized = true;
     notifyListeners();
   }

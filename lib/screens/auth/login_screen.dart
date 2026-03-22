@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart' as app_auth;
 import '../../widgets/custom_text_field.dart';
@@ -38,7 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
       email: _emailCtrl.text,
       password: _passwordCtrl.text,
     );
-    if (!ok && mounted) {
+    if (ok) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('remember_me', _rememberMe);
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(auth.errorMessage ?? 'Login failed'),
@@ -125,7 +129,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () async {
                       final auth = context.read<app_auth.AuthProvider>();
                       final ok = await auth.signInWithGoogle();
-                      if (!ok && context.mounted) {
+                      if (ok) {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('remember_me', _rememberMe);
+                      } else if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(auth.errorMessage ?? 'Google Sign-In failed'),
