@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
 import '../../core/constants/colors.dart';
 import '../../models/faculty_model.dart';
 import '../../models/hall_model.dart';
 import '../../models/lab_model.dart';
 import '../../models/location_model.dart';
+import '../../models/search_log_model.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../home/home_screen.dart';
@@ -803,6 +806,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           if (location != null && location.buildingId != null && mounted) {
             final building =
                 await _firestoreService.getBuilding(location.buildingId!);
+
+            // Log search for analytics
+            if (building != null) {
+              final String platform = kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : 'ios');
+
+              await _firestoreService.logSearch(SearchLogModel(
+                buildingId: building.id,
+                buildingName: building.name,
+                platform: platform,
+                query: location.name, // Use destination name as query
+                timestamp: DateTime.now(),
+              ));
+            }
 
             if (mounted) {
               Navigator.pop(context); // Close loading dialog

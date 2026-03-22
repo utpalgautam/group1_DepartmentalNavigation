@@ -86,7 +86,28 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _newPasswordCtrl.addListener(_updateStrength);
+  }
+
+  void _updateStrength() {
+    setState(() {});
+  }
+
+  Map<String, bool> _getRequirements(String p) {
+    return {
+      'At least 8 characters': p.length >= 8,
+      'Contains uppercase letter': p.contains(RegExp(r'[A-Z]')),
+      'Contains lowercase letter': p.contains(RegExp(r'[a-z]')),
+      'Contains a number': p.contains(RegExp(r'[0-9]')),
+      'Contains special character (!@#\$%^&*)': p.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]')),
+    };
+  }
+
+  @override
   void dispose() {
+    _newPasswordCtrl.removeListener(_updateStrength);
     _oldPasswordCtrl.dispose();
     _newPasswordCtrl.dispose();
     _confirmPasswordCtrl.dispose();
@@ -96,6 +117,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<app_auth.AuthProvider>().isLoading;
+    final requirements = _getRequirements(_newPasswordCtrl.text);
+    final allMet = requirements.values.every((v) => v);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight, // F5F5F5 style background
@@ -107,41 +130,47 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Back Button (Top Left)
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.black, 
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      if (Navigator.canPop(context)) Navigator.pop(context);
-                    },
-                  ),
+                // Integrated Header: Back Button + Title
+                Row(
+                  children: [
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black, 
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                        onPressed: () {
+                          if (Navigator.canPop(context)) Navigator.pop(context);
+                        },
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(8),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Secure account',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 32),
-
-                // Header Text
+                const SizedBox(height: 8),
                 const Text(
-                  'Secure your account',
+                  'Enter current and new password.', 
                   style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.5,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Please enter your current password and\nchoose a new one for your account.', 
-                  style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     color: Color(0xFF888888),
-                    height: 1.4,
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 16),
 
                 // Old Password Field
                 CustomTextField(
@@ -160,7 +189,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -182,7 +211,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // New Password Field
                 CustomTextField(
@@ -198,11 +227,42 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   },
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 6) return 'Must be at least 6 characters';
+                    if (!allMet) return 'Please fulfill all strength requirements';
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                
+                // Password Requirements List
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Column(
+                    children: requirements.entries.map((entry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              entry.value ? Icons.check_circle : Icons.circle_outlined,
+                              size: 16,
+                              color: entry.value ? Colors.green : Colors.grey,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              entry.key,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: entry.value ? Colors.black : Colors.grey.shade600,
+                                fontWeight: entry.value ? FontWeight.w500 : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
 
                 // Confirm Password Field
                 CustomTextField(
@@ -224,7 +284,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
                 // Warning Label
                 Row(
@@ -244,7 +304,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Update Password Button (matches image exactly, pill shape, black)
                 SizedBox(

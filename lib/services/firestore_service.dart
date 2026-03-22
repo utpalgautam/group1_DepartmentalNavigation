@@ -9,6 +9,7 @@ import '../models/hall_model.dart';
 import '../models/location_model.dart';
 import '../models/floor_model.dart';
 import '../models/route_model.dart';
+import '../models/search_log_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -21,6 +22,7 @@ class FirestoreService {
   CollectionReference get _halls => _firestore.collection('halls');
   CollectionReference get _locations => _firestore.collection('locations');
   CollectionReference get _floors => _firestore.collection('floormap');
+  CollectionReference get _searchLogs => _firestore.collection('searchLogs');
 
   // ========== USER OPERATIONS ==========
 
@@ -400,5 +402,11 @@ class FirestoreService {
     }
 
     return null;
+  }
+
+  // ========== ANALYTICS / LOGGING ==========
+
+  Future<void> logSearch(SearchLogModel log) async {
+    await _searchLogs.add(log.toFirestore());
   }
 }
