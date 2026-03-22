@@ -268,7 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 80), // Bottom padding for nav bar
+              const SizedBox(height: 140), // Bottom padding for nav bar
             ],
           ),
         ),
