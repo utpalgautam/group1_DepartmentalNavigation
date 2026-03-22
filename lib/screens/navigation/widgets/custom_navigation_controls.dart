@@ -77,7 +77,7 @@ class _CustomNavigationControlsState extends State<CustomNavigationControls> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          const Text(
             'NIT Calicut, Keralam',
             style: TextStyle(
               fontSize: 14,

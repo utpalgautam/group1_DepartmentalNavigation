@@ -34,7 +34,7 @@ dependencies:
   dio: ^5.4.0           # For file downloads
   flutter_polyline_points: ^2.0.0
   image_picker: ^1.2.0  # For profile pictures
-  google_sign_in: ^7.1.1
+  google_sign_in: ^6.1.5
   local_auth: ^2.1.6
 
 dev_dependencies:

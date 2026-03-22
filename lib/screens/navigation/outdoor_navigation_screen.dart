@@ -102,7 +102,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
               MaplibreMap(
                 onMapCreated: _onMapCreated,
                 onStyleLoadedCallback: _onStyleLoaded,
-                initialCameraPosition: CameraPosition(
+                initialCameraPosition: const CameraPosition(
                   target:
                       LatLng(AppConstants.campusLat, AppConstants.campusLng),
                   zoom: AppConstants.defaultMapZoom,
@@ -151,7 +151,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Destination',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -162,7 +162,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
                                 widget.destinationName ??
                                     widget.targetBuilding?.name ??
                                     'Selected Location',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
@@ -614,7 +614,9 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
   void _addDestinationMarker() async {
     if (_mapController == null ||
         widget.destLat == null ||
-        widget.destLng == null) return;
+        widget.destLng == null) {
+      return;
+    }
 
     try {
       await _mapController!.addSymbol(

@@ -135,11 +135,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   alignment: Alignment.topLeft,
                   child: Container(
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.black,
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -327,7 +327,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: controller.text.isEmpty ? null : controller.text,
+          initialValue: controller.text.isEmpty ? null : controller.text,
           validator: validator,
           style: const TextStyle(
             fontSize: 16,

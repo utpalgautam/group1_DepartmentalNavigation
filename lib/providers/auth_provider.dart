@@ -101,6 +101,23 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // ── Google Sign In ────────────────────────────────────────────────────────
+  Future<bool> signInWithGoogle() async {
+    _setLoading(true);
+    _clearError();
+    try {
+      _currentUser = await _authService.signInWithGoogle();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // ── Update Profile Image ──────────────────────────────────────────────────
   Future<bool> updateProfileImage(File imageFile) async {
     _setLoading(true);

@@ -137,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const SizedBox(height: 20),
               // --- Header (Avatar & Name) ---
-              _buildProfileHeader(user?.name ?? 'Guest User', user?.userType?.name ?? 'User'),
+              _buildProfileHeader(user?.name ?? 'Guest User', user?.userType.name ?? 'User'),
               const SizedBox(height: 40),
               
               // --- Sections ---
@@ -207,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       iconBgColor: Colors.blueGrey[50]!,
                       trailing: Switch(
                         value: security.isDeviceLockEnabled,
-                        activeColor: Colors.white,
+                        activeThumbColor: Colors.white,
                         activeTrackColor: Colors.blue[600],
                         onChanged: (value) async {
                           if (value) {

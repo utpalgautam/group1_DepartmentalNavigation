@@ -42,7 +42,7 @@ class _IndoorNavigationScreenState extends State<IndoorNavigationScreen> {
   String? _errorMessage;
 
   bool _isNavigatingToStairs = false;
-  bool _isDebugMode = false;
+  final bool _isDebugMode = false;
 
   // Map interactive state
   double _scale = 1.0;

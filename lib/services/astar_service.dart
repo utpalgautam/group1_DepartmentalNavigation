@@ -46,8 +46,9 @@ class AStarService {
       // Explore neighbors
       for (var edge in graph.edges) {
         String? neighborId;
-        if (edge.from == current.node.id) neighborId = edge.to;
-        else if (edge.to == current.node.id) neighborId = edge.from;
+        if (edge.from == current.node.id) {
+          neighborId = edge.to;
+        } else if (edge.to == current.node.id) neighborId = edge.from;
 
         if (neighborId != null) {
           if (closedList.any((n) => n.node.id == neighborId)) continue;

@@ -260,8 +260,9 @@ class _RecentSearchesScreenState extends State<RecentSearchesScreen> {
 
     // Icon fallback for the image
     IconData iconData = Icons.location_on;
-    if (location.type == LocationType.lab) iconData = Icons.science;
-    else if (location.type == LocationType.faculty) iconData = Icons.person;
+    if (location.type == LocationType.lab) {
+      iconData = Icons.science;
+    } else if (location.type == LocationType.faculty) iconData = Icons.person;
     else if (location.type == LocationType.hall) iconData = Icons.meeting_room;
 
     return Container(

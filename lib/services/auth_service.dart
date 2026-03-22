@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -106,6 +107,57 @@ class AuthService {
     if (!doc.exists || doc.data() == null) return null;
 
     return UserModel.fromFirestore(doc.data()!, user.uid);
+  }
+
+  // ── Google Sign In ────────────────────────────────────────────────────────
+  Future<UserModel> signInWithGoogle() async {
+    try {
+      final googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleSignInAccount = await googleSignIn.signIn();
+
+      if (googleSignInAccount == null) {
+        throw 'Google Sign-In was cancelled.';
+      }
+
+      final GoogleSignInAuthentication googleSignInAuthentication =
+          await googleSignInAccount.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+
+      final User user = userCredential.user!;
+      
+      final doc = await _db.collection('users').doc(user.uid).get();
+      UserModel userModel;
+      
+      if (doc.exists && doc.data() != null) {
+        userModel = UserModel.fromFirestore(doc.data()!, user.uid);
+        await _db.collection('users').doc(user.uid).update({
+          'lastLogin': Timestamp.fromDate(DateTime.now()),
+        });
+      } else {
+        final now = DateTime.now();
+        userModel = UserModel(
+          uid: user.uid,
+          email: user.email ?? '',
+          name: user.displayName ?? 'Google User',
+          userType: UserType.student, // default
+          createdAt: now,
+          lastLogin: now,
+        );
+        await _db.collection('users').doc(user.uid).set(userModel.toFirestore());
+      }
+      return userModel;
+    } on FirebaseAuthException catch (e) {
+      throw _authErrorMessage(e.code);
+    } catch (e) {
+      throw 'Google Sign-In failed: $e';
+    }
   }
 
   // ── Update Profile Image (Base64) ─────────────────────────────────────────

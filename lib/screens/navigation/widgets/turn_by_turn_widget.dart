@@ -37,8 +37,8 @@ class TurnByTurnWidget extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F0FE), // Google blue light
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F0FE), // Google blue light
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -48,7 +48,7 @@ class TurnByTurnWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

@@ -387,8 +387,9 @@ class _SearchScreenState extends State<SearchScreen> {
     
     // Choose an icon based on location type
     IconData iconData = Icons.domain;
-    if (location.type == LocationType.lab) iconData = Icons.science;
-    else if (location.type == LocationType.faculty) iconData = Icons.person;
+    if (location.type == LocationType.lab) {
+      iconData = Icons.science;
+    } else if (location.type == LocationType.faculty) iconData = Icons.person;
 
     return GestureDetector(
       onTap: () => _onLocationSelected(location),

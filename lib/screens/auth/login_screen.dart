@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart' as app_auth;
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/primary_button.dart';
+import '../onboarding/onboarding_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
@@ -65,14 +67,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.topLeft,
                   child: Container(
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.black,
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.black),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
-                        // Assuming you can go back, otherwise ignore or pop
-                        if (Navigator.canPop(context)) Navigator.pop(context);
+                        // Go back to onboarding
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                        );
                       },
                     ),
                   ),
@@ -117,23 +122,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    onPressed: () {
-                      // Google sign in logic placeholder
+                    onPressed: () async {
+                      final auth = context.read<app_auth.AuthProvider>();
+                      final ok = await auth.signInWithGoogle();
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(auth.errorMessage ?? 'Google Sign-In failed'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      }
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // A simple G logo replacement if asset not exist
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                           ),
-                          child: const Text('G', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 18)),
+                          child: SvgPicture.asset('assets/icons/google.svg', height: 24, width: 24),
                         ),
                         const SizedBox(width: 8),
                         const Text(
-                          'Google',
+                          'Continue with Google',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -207,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               _rememberMe = val;
                             });
                           },
-                          activeColor: Colors.black,
+                          activeThumbColor: Colors.black,
                         ),
                         const Text(
                           'Remember me',
@@ -248,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Continue as Guest Button
+                // Continue as Guest Button (moved inside a row, or leaving as is with maybe Google sign up?)
                 PrimaryButton(
                   label: 'Continue as Guest',
                   isSecondary: true,
