@@ -99,8 +99,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (ok) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('remember_me', true);
+      // We explicitly log out the user so they can manually log in via the Login Screen
+      // after clicking the back button, as requested for the demo flow.
+      await auth.logout();
       
       messenger.showSnackBar(
         const SnackBar(
@@ -118,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           duration: Duration(seconds: 3),
         ),
       );
-      // Pop all routes back to root — AuthWrapper will show home since user is now logged in
+      // Explicit route pop to Login per user request
       navigator.popUntil((route) => route.isFirst);
     } else {
       messenger.showSnackBar(
@@ -205,42 +206,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 24),
 
                 // Full Name
-                CustomTextField(
-                  label: 'Full Name',
-                  hintText: 'John Doe',
-                  controller: _nameCtrl,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Name is required' : null,
+                Semantics(
+                  label: 'name_input',
+                  child: CustomTextField(
+                    key: const Key('register_name_field'),
+                    label: 'Full Name',
+                    hintText: 'John Doe',
+                    controller: _nameCtrl,
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Name is required' : null,
+                  ),
                 ),
                 const SizedBox(height: 16),
 
                 // Email
-                CustomTextField(
-                  label: 'Email Address',
-                  hintText: 'user@example.com',
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Email is required';
-                    if (!v.contains('@')) return 'Invalid email';
-                    return null;
-                  },
+                Semantics(
+                  label: 'email_input',
+                  child: CustomTextField(
+                    key: const Key('register_email_field'),
+                    label: 'Email Address',
+                    hintText: 'user@example.com',
+                    controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Email is required';
+                      if (!v.contains('@')) return 'Invalid email';
+                      return null;
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16),
 
                 // Password
-                CustomTextField(
-                  label: 'Password',
-                  hintText: '••••••••',
-                  controller: _passwordCtrl,
-                  isPassword: true,
-                  isVisible: !_obscurePassword,
-                  onVisibilityToggle: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                  onChanged: (v) => setState(() => _passwordValue = v),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Password is required';
-                    return AuthService.validatePasswordStrength(v);
-                  },
+                Semantics(
+                  label: 'password_input',
+                  child: CustomTextField(
+                    key: const Key('register_password_field'),
+                    label: 'Password',
+                    hintText: '••••••••',
+                    controller: _passwordCtrl,
+                    isPassword: true,
+                    isVisible: !_obscurePassword,
+                    onVisibilityToggle: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    onChanged: (v) => setState(() => _passwordValue = v),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Password is required';
+                      return AuthService.validatePasswordStrength(v);
+                    },
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -249,19 +262,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 // Confirm Password
-                CustomTextField(
-                  label: 'Confirm Password',
-                  hintText: '••••••••',
-                  controller: _confirmCtrl,
-                  isPassword: true,
-                  isVisible: !_obscureConfirm,
-                  onVisibilityToggle: () =>
-                      setState(() => _obscureConfirm = !_obscureConfirm),
-                  onChanged: (v) => setState(() => _confirmValue = v),
-                  validator: (v) {
-                    if (v != _passwordCtrl.text) return 'Passwords do not match';
-                    return null;
-                  },
+                Semantics(
+                  label: 'confirm_password_input',
+                  child: CustomTextField(
+                    key: const Key('register_confirm_password_field'),
+                    label: 'Confirm Password',
+                    hintText: '••••••••',
+                    controller: _confirmCtrl,
+                    isPassword: true,
+                    isVisible: !_obscureConfirm,
+                    onVisibilityToggle: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                    onChanged: (v) => setState(() => _confirmValue = v),
+                    validator: (v) {
+                      if (v != _passwordCtrl.text) return 'Passwords do not match';
+                      return null;
+                    },
+                  ),
                 ),
                 const SizedBox(height: 6),
 
@@ -324,12 +341,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 32),
 
                 // Submit — disabled until passwords pass all checks
-                PrimaryButton(
-                  label: 'Sign Up',
-                  isLoading: auth.isLoading,
-                  onTap: (_passwordStrengthOk && _confirmMatch)
-                      ? _submit
-                      : null,
+                Semantics(
+                  label: 'submit_register_button',
+                  button: true,
+                  child: PrimaryButton(
+                    key: const Key('register_button'),
+                    label: 'Sign Up',
+                    isLoading: auth.isLoading,
+                    onTap: (_passwordStrengthOk && _confirmMatch)
+                        ? _submit
+                        : null,
+                  ),
                 ),
                 const SizedBox(height: 32),
 
