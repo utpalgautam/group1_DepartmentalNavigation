@@ -306,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await auth.logout();
                 if (mounted) {
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                    MaterialPageRoute(builder: (context) => const AuthWrapper(hasSeenOnboarding: true)),
                     (route) => false,
                   );
                 }
