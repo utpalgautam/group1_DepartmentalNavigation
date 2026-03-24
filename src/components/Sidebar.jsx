@@ -2,14 +2,14 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  FaTachometerAlt,
-  FaBuilding,
-  FaUsers,
-  FaRoute,
-  FaUniversity,
-  FaDoorOpen,
-  FaSignOutAlt
-} from 'react-icons/fa';
+  LuLayoutDashboard,
+  LuBuilding2,
+  LuUsers,
+  LuRoute,
+  LuGraduationCap,
+  LuFlaskConical,
+  LuLogOut
+} from 'react-icons/lu';
 import { logoutAdmin } from '../services/authService';
 
 const Sidebar = () => {
@@ -41,37 +41,32 @@ const Sidebar = () => {
           <ul className="nav-links">
             <li>
               <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <FaTachometerAlt />
+                <LuLayoutDashboard />
               </NavLink>
             </li>
             <li>
               <NavLink to="/buildings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <FaBuilding />
+                <LuBuilding2 />
               </NavLink>
             </li>
             <li>
               <NavLink to="/faculties" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <FaUniversity />
+                <LuGraduationCap />
               </NavLink>
             </li>
             <li>
               <NavLink to="/halls-labs" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <FaDoorOpen />
+                <LuFlaskConical />
               </NavLink>
             </li>
             <li>
               <NavLink to="/routing" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <FaRoute />
+                <LuRoute />
               </NavLink>
             </li>
-          </ul>
-        </div>
-
-        <div className="nav-section">
-          <ul className="nav-links">
             <li>
               <NavLink to="/users" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <FaUsers />
+                <LuUsers />
               </NavLink>
             </li>
           </ul>
@@ -85,7 +80,7 @@ const Sidebar = () => {
             onClick={() => setShowLogoutModal(true)}
             title="Logout"
           >
-            <FaSignOutAlt />
+            <LuLogOut />
           </button>
         </div>
       </div>
@@ -96,7 +91,7 @@ const Sidebar = () => {
           <div className="logout-modal" onClick={(e) => e.stopPropagation()}>
             {/* Icon */}
             <div className="logout-modal-icon">
-              <FaSignOutAlt />
+              <LuLogOut />
             </div>
 
             <h2 className="logout-modal-title">Sign Out?</h2>

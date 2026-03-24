@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaBuilding, FaUsers, FaFlask } from 'react-icons/fa';
+import { LuSearch, LuBuilding2, LuUsers, LuFlaskConical, LuGraduationCap, LuUserPlus, LuSparkles } from 'react-icons/lu';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { db } from '../services/firebaseConfig';
 import { collection, getDocs } from 'firebase/firestore';
 import { getSearchesPerBuilding, getSearchesPerDay } from '../services/analyticsService';
 import Header from '../components/Header';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { userData } = useAuth();
   const [loading, setLoading] = useState(true);
   const [summaryData, setSummaryData] = useState([]);
   const [searchesByBuilding, setSearchesByBuilding] = useState([]);
@@ -27,9 +29,9 @@ const Dashboard = () => {
         ]);
 
         setSummaryData([
-          { label: 'Total Buildings', count: buildingsSnap.size, icon: <FaBuilding /> },
-          { label: 'Total Faculty', count: facultySnap.size, icon: <FaUsers /> },
-          { label: 'Total Halls/Labs', count: hallsSnap.size + labsSnap.size, icon: <FaFlask /> },
+          { label: 'Total Buildings', count: buildingsSnap.size, icon: <LuBuilding2 /> },
+          { label: 'Total Faculty', count: facultySnap.size, icon: <LuUsers /> },
+          { label: 'Total Halls/Labs', count: hallsSnap.size + labsSnap.size, icon: <LuFlaskConical /> },
         ]);
 
         const allBuildings = buildingsSnap.docs.map(doc => doc.data().name);
@@ -59,49 +61,19 @@ const Dashboard = () => {
   const quickActions = [
     {
       label: 'Add Faculty', sub: 'Nearby', path: '/faculties',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      )
+      icon: <LuGraduationCap size={24} />
     },
     {
       label: 'Add Building', sub: 'Nearby', path: '/buildings',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="4" y="2" width="16" height="20" rx="1" />
-          <path d="M8 6h.01" />
-          <path d="M16 6h.01" />
-          <path d="M8 10h.01" />
-          <path d="M16 10h.01" />
-          <path d="M8 14h.01" />
-          <path d="M16 14h.01" />
-          <path d="M8 18h.01" />
-          <path d="M16 18h.01" />
-        </svg>
-      )
+      icon: <LuBuilding2 size={24} />
     },
     {
       label: 'Add Halls/Labs', sub: 'Nearby', path: '/halls-labs',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10 2v7.3l-4.7 9.5A2 2 0 0 0 7 22h10a2 2 0 0 0 1.7-3.2L14 9.3V2" />
-          <path d="M8.5 2h7" />
-          <path d="M7 16h10" />
-        </svg>
-      )
+      icon: <LuFlaskConical size={24} />
     },
     {
       label: 'Add User', sub: 'Nearby', path: '/users',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      )
+      icon: <LuUserPlus size={24} />
     },
   ];
 
@@ -116,32 +88,26 @@ const Dashboard = () => {
           <div className="db-card-circle-bg"></div>
           <div className="db-welcome-content">
             <div className="db-welcome-emoji">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19.56 12C19.56 12.82 19.34 13.59 18.96 14.26C18.66 14.8 18.25 15.26 17.76 15.62C17.27 15.98 16.71 16.23 16.11 16.36C15.51 16.49 14.88 16.5 14.25 16.4C13.62 16.3 13.01 16.09 12.46 15.78L10.5 14.5L8.54 13.22C7.99 12.91 7.38 12.7 6.75 12.6C6.12 12.5 5.49 12.51 4.89 12.64C4.29 12.77 3.73 13.02 3.24 13.38C2.75 13.74 2.34 14.2 2.04 14.74C1.66 15.41 1.44 16.18 1.44 17C1.44 19.43 3.41 21.4 5.84 21.4H13.84C17.15 21.4 19.84 18.71 19.84 15.4C19.84 14.39 19.59 13.44 19.14 12.61L19.56 12Z" fill="black" />
-                <path d="M7 10C7.55 10 8 9.55 8 9V4C8 3.45 7.55 3 7 3C6.45 3 6 3.45 6 4V9C6 9.55 6.45 10 7 10Z" fill="black" />
-                <path d="M11 9C11.55 9 12 8.55 12 8V3C12 2.45 11.55 2 11 2C10.45 2 10 2.45 10 3V8C10 8.55 10.45 9 11 9Z" fill="black" />
-                <path d="M15 10C15.55 10 16 9.55 16 9V4C16 3.45 15.55 3 15 3C14.45 3 14 3.45 14 4V9C14 9.55 14.45 10 15 10Z" fill="black" />
-                <path d="M19 12C19.55 12 20 11.55 20 11V6C20 5.45 19.55 5 19 5C18.45 5 18 5.45 18 6V11C18 11.55 18.45 12 19 12Z" fill="black" />
-              </svg>
+              <LuSparkles size={32} color="black" />
             </div>
-            <h2>Welcome, Utpal</h2>
+            <h2>Welcome, {userData?.name || 'Admin'}</h2>
             <p>System is active and stable.</p>
           </div>
         </div>
 
         {/* Render Summary Data Cards */}
         <div className="db-stat-card db-stat-purple">
-          <div className="db-stat-icon"><FaUsers color="#000" /></div>
+          <div className="db-stat-icon"><LuUsers color="#000" /></div>
           <div className="db-stat-number">{loading ? '—' : (summaryData[1]?.count || '124')}</div>
           <div className="db-stat-label">Total Faculty</div>
         </div>
         <div className="db-stat-card db-stat-green">
-          <div className="db-stat-icon"><FaBuilding color="#000" /></div>
+          <div className="db-stat-icon"><LuBuilding2 color="#000" /></div>
           <div className="db-stat-number">{loading ? '—' : (summaryData[0]?.count || '45')}</div>
           <div className="db-stat-label">Total Buildings</div>
         </div>
         <div className="db-stat-card db-stat-beige">
-          <div className="db-stat-icon"><FaFlask color="#000" /></div>
+          <div className="db-stat-icon"><LuFlaskConical color="#000" /></div>
           <div className="db-stat-number">{loading ? '—' : (summaryData[2]?.count || '18')}</div>
           <div className="db-stat-label">Total Labs/Hall</div>
         </div>

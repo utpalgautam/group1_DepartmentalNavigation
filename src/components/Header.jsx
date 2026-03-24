@@ -1,5 +1,5 @@
 // src/components/Header.jsx
-import { FaSearch } from 'react-icons/fa';
+import { LuSearch } from 'react-icons/lu';
 
 const Header = ({ title, searchTerm, onSearchChange, searchDisabled = false, onBack }) => {
   return (
@@ -14,7 +14,7 @@ const Header = ({ title, searchTerm, onSearchChange, searchDisabled = false, onB
       </div>
       <div className="db-header-right">
         <div className="db-search-bar">
-          <FaSearch className="db-search-icon" />
+          <LuSearch className="db-search-icon" />
           <input
             type="text"
             placeholder="Search..."
