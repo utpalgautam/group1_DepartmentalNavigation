@@ -332,8 +332,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         }
 
         return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 120),
           itemCount: items.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (_, __) => const SizedBox(height: 2),
           itemBuilder: (context, index) {
             final faculty = items[index];
             return _buildFacultyCard(faculty);
@@ -356,169 +357,246 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         // Decode base64 image if available
         final imageBytes = faculty.imageBytes;
 
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1B1B1C),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            children: [
-              // Decorative circle top-right
-              Positioned(
-                top: -60,
-                right: -50,
-                child: Container(
-                  width: 160,
-                  height: 160,
-                  decoration: const BoxDecoration(
+        return GestureDetector(
+          onTap: () {
+            _showFacultyDetailsPopup(
+                context, faculty, roomLabel, floorLabel, location);
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1B1B1C),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              children: [
+                // Profile Pic
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFF222223),
+                    border: Border.all(color: Colors.white, width: 2),
+                    color: const Color(0xFF333333),
+                  ),
+                  child: ClipOval(
+                    child: imageBytes != null
+                        ? Image.memory(
+                            imageBytes,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                                Icons.person,
+                                color: Color(0xFF9CA3AF),
+                                size: 30),
+                          )
+                        : (faculty.photoUrl != null &&
+                                faculty.photoUrl!.isNotEmpty)
+                            ? Image.network(
+                                faculty.photoUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.person,
+                                    color: Color(0xFF9CA3AF),
+                                    size: 30),
+                              )
+                            : const Icon(Icons.person,
+                                color: Color(0xFF9CA3AF), size: 30),
                   ),
                 ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Top row: photo + info ─────────────────────
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Photo (rounded square)
-                        // Outer: white border ring
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.20,
-                          height: MediaQuery.of(context).size.width * 0.20,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: Colors.white, width: 3),
-                            color: const Color(0xFF333333),
-                          ),
-                          // Inner: ClipRRect clips the image inside the border
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15), // 18 - 3
-                            child: imageBytes != null
-                                ? Image.memory(
-                                    imageBytes,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(
-                                        Icons.person,
-                                        color: Color(0xFFCCCCCC),
-                                        size: 36),
-                                  )
-                                : (faculty.photoUrl != null &&
-                                        faculty.photoUrl!.isNotEmpty)
-                                    ? Image.network(
-                                        faculty.photoUrl!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(Icons.person,
-                                                color: Color(0xFFCCCCCC),
-                                                size: 36),
-                                      )
-                                    : const Icon(Icons.person,
-                                        color: Color(0xFFCCCCCC), size: 36),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        // Info column
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                faculty.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 5),
-                              // Role (Professor / Assistant Professor etc.)
-                              Text(
-                                faculty.role.isNotEmpty
-                                    ? faculty.role
-                                    : faculty.designation,
-                                style: const TextStyle(
-                                  color: Color(0xFF909090),
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              // Department
-                              Text(
-                                faculty.department,
-                                style: const TextStyle(
-                                  color: Color(0xFF909090),
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              // Email
-                              Text(
-                                'Email : ${faculty.email}',
-                                style: const TextStyle(
-                                  color: Color(0xFF909090),
-                                  fontSize: 13,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                const SizedBox(width: 16),
+                // Name
+                Expanded(
+                  child: Text(
+                    faculty.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 14),
-                    // ── Bottom row: room pill + floor pill + Navigate ─
-                    Row(
-                      children: [
-                        _buildPill(roomLabel),
-                        const SizedBox(width: 8),
-                        _buildPill(floorLabel),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: _buildNavigateButton(
-                                faculty.locationId, context),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                // Navigation Button with Icon and Text
+                GestureDetector(
+                  onTap: () => _handleNavigationTap(faculty.locationId, context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.navigation, color: Colors.black, size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          'Navigate',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildPill(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF333436),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
+  void _showFacultyDetailsPopup(
+    BuildContext context,
+    FacultyModel faculty,
+    String roomLabel,
+    String floorLabel,
+    LocationModel? location,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final imageBytes = faculty.imageBytes;
+        return Dialog(
+          backgroundColor: const Color(0xFF1B1B1C),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Profile image
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    color: const Color(0xFF333333),
+                  ),
+                  child: ClipOval(
+                    child: imageBytes != null
+                        ? Image.memory(
+                            imageBytes,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                                Icons.person,
+                                color: Color(0xFF9CA3AF),
+                                size: 50),
+                          )
+                        : (faculty.photoUrl != null &&
+                                faculty.photoUrl!.isNotEmpty)
+                            ? Image.network(
+                                faculty.photoUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.person,
+                                    color: Color(0xFF9CA3AF),
+                                    size: 50),
+                              )
+                            : const Icon(Icons.person,
+                                color: Color(0xFF9CA3AF), size: 50),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  faculty.name,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: Colors.grey, thickness: 1),
+                const SizedBox(height: 16),
+                _buildDetailRow('Designation:',
+                    faculty.role.isNotEmpty ? faculty.role : faculty.designation),
+                const SizedBox(height: 10),
+                _buildDetailRow('Department:', faculty.department),
+                const SizedBox(height: 10),
+                if (location != null && location.buildingId != null)
+                  FutureBuilder<dynamic>(
+                    future: _firestoreService.getBuilding(location.buildingId!),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: _buildDetailRow('Building:', 'Loading...'),
+                        );
+                      }
+                      if (snapshot.hasData && snapshot.data != null) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: _buildDetailRow('Building:', snapshot.data!.name),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                _buildDetailRow('Cabin:', roomLabel),
+                const SizedBox(height: 10),
+                _buildDetailRow('Email:', faculty.email),
+                const SizedBox(height: 24),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Close',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF909090),
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
-      ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -546,6 +624,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         }
 
         return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 120),
           itemCount: items.length,
           separatorBuilder: (_, __) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
@@ -591,6 +670,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         }
 
         return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 120),
           itemCount: items.length,
           separatorBuilder: (_, __) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
@@ -789,75 +869,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
   Widget _buildNavigateButton(String locationId, BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        try {
-          // Show loading indicator
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) => const Center(child: CircularProgressIndicator()),
-          );
-
-          final location = await _firestoreService.getLocation(locationId);
-          if (location != null && location.buildingId != null && mounted) {
-            final building =
-                await _firestoreService.getBuilding(location.buildingId!);
-
-            // Log search for analytics
-            if (building != null) {
-              final String platform = kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : 'ios');
-
-              await _firestoreService.logSearch(SearchLogModel(
-                buildingId: building.id,
-                buildingName: building.name,
-                platform: platform,
-                query: location.name, // Use destination name as query
-                timestamp: DateTime.now(),
-              ));
-            }
-
-            if (mounted) {
-              Navigator.pop(context); // Close loading dialog
-              if (building != null && building.entryPoints.isNotEmpty) {
-                final entryPoint =
-                    building.entryPoints.first; // Default to first entry point
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OutdoorNavigationScreen(
-                      targetBuilding: building,
-                      targetEntryPoint: entryPoint,
-                      destinationId: location.id,
-                      destinationName: location.name,
-                      destLat: entryPoint.latitude,
-                      destLng: entryPoint.longitude,
-                    ),
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Building or entry point data not found.')),
-                );
-              }
-            }
-          } else {
-            if (mounted) {
-              Navigator.pop(context); // Close loading dialog
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Location data not found.')),
-              );
-            }
-          }
-        } catch (e) {
-          if (mounted) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $e')),
-            );
-          }
-        }
-      },
+      onTap: () => _handleNavigationTap(locationId, context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
@@ -885,6 +897,76 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleNavigationTap(String locationId, BuildContext context) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      );
+
+      final location = await _firestoreService.getLocation(locationId);
+      if (location != null && location.buildingId != null && mounted) {
+        final building =
+            await _firestoreService.getBuilding(location.buildingId!);
+
+        // Log search for analytics
+        if (building != null) {
+          final String platform = kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : 'ios');
+
+          await _firestoreService.logSearch(SearchLogModel(
+            buildingId: building.id,
+            buildingName: building.name,
+            platform: platform,
+            query: location.name, // Use destination name as query
+            timestamp: DateTime.now(),
+          ));
+        }
+
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          if (building != null && building.entryPoints.isNotEmpty) {
+            final entryPoint =
+                building.entryPoints.first; // Default to first entry point
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => OutdoorNavigationScreen(
+                  targetBuilding: building,
+                  targetEntryPoint: entryPoint,
+                  destinationId: location.id,
+                  destinationName: location.name,
+                  destLat: entryPoint.latitude,
+                  destLng: entryPoint.longitude,
+                ),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Building or entry point data not found.')),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location data not found.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 }
 
