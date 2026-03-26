@@ -10,7 +10,7 @@ import '../directory/directory_screen.dart';
 import '../map/offline_maps_screen.dart';
 import '../map/explore_map_screen.dart';
 import '../../widgets/bottom_nav_bar.dart';
-
+import '../../main.dart' show AuthWrapper;
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -205,6 +205,35 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? const Icon(Icons.person,
                               color: Colors.white, size: 28)
                           : null,
+                    ),
+                  )
+                else
+                  GestureDetector(
+                    onTap: () {
+                      auth.setGuestMode(false);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AuthWrapper(hasSeenOnboarding: true)),
+                        (route) => false,
+                      );
+                    },
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        border: Border.all(color: Colors.black12, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.logout,
+                          color: Colors.black, size: 24),
                     ),
                   ),
               ],

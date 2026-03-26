@@ -5,7 +5,6 @@ import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart' as app_auth;
 import '../../main.dart' show AuthWrapper;
 import '../onboarding/onboarding_screen.dart';
-import '../home/home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
@@ -317,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           auth.setGuestMode(true);
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            MaterialPageRoute(builder: (_) => const AuthWrapper(hasSeenOnboarding: true)),
                             (route) => false,
                           );
                         },
