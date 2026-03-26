@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart' as app_auth;
 import '../../main.dart' show AuthWrapper;
 import '../onboarding/onboarding_screen.dart';
+import '../home/home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 
@@ -26,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordFocusNode = FocusNode();
 
   bool _obscurePassword = true;
-  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -51,10 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
       password: _passwordCtrl.text,
     );
     if (ok) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('remember_me', _rememberMe);
       if (mounted) {
-        // Enforce root navigator reset to handle AuthWrapper (important after onboarding)
+        // Firebase session persists automatically — no remember_me flag needed.
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const AuthWrapper(hasSeenOnboarding: true)),
           (route) => false,
@@ -146,8 +142,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           final appAuth = context.read<app_auth.AuthProvider>();
                           final ok = await appAuth.signInWithGoogle();
                           if (ok) {
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.setBool('remember_me', _rememberMe);
                             if (context.mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(builder: (_) => const AuthWrapper(hasSeenOnboarding: true)),
@@ -250,51 +244,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       
                       const SizedBox(height: 16),
 
-                      // Remember me & Forgot Password
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              _AnimatedSwitch(
-                                value: _rememberMe,
-                                onChanged: (val) {
-                                  HapticFeedback.lightImpact();
-                                  setState(() {
-                                    _rememberMe = val;
-                                  });
-                                },
+                      // Forgot Password (aligned to the right)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(),
                               ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Remember me',
-                                style: TextStyle(
-                                  color: Color(0xFF666666),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const ForgotPasswordScreen(),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                       
                       const Spacer(flex: 2),
@@ -343,7 +313,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Continue as Guest Button
                       _ScaleButton(
                         onTap: () {
-                          // Guest logic here
+                          final auth = context.read<app_auth.AuthProvider>();
+                          auth.setGuestMode(true);
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            (route) => false,
+                          );
                         },
                         child: Container(
                           height: 50,
@@ -474,61 +450,6 @@ class _ScaleButtonState extends State<_ScaleButton> with SingleTickerProviderSta
   }
 }
 
-/// A modern pill-shaped animated switch
-class _AnimatedSwitch extends StatelessWidget {
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _AnimatedSwitch({
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        width: 44,
-        height: 24,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          color: value ? Colors.black : Colors.grey.shade300,
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              left: value ? 22 : 2,
-              right: value ? 2 : 22,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    if (!value)
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 2,
-                        offset: const Offset(0, 1),
-                      )
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// A text field that smoothly animates its border and icon when focused
 class _AnimatedFocusTextField extends StatefulWidget {

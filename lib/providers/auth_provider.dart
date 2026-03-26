@@ -3,44 +3,35 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
   UserModel? _currentUser;
   bool _isLoading = false;
-  bool _initialized = false; // true after first auth state check completes
+  bool _initialized = false; 
+  bool _isGuest = false; // guest mode flag
   String? _errorMessage;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isInitialized => _initialized;
+  bool get isGuest => _isGuest;
   String? get errorMessage => _errorMessage;
-  bool get isAuthenticated => _currentUser != null;
+  bool get isAuthenticated => _currentUser != null || _isGuest;
 
   AuthProvider() {
     // Listen to Firebase auth state changes
     _authService.authStateChanges.listen(_onAuthStateChanged);
   }
 
-  bool _firstCheck = true;
-
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
     if (firebaseUser == null) {
       _currentUser = null;
+      _isGuest = false; // Reset guest mode if firebase auth changes
     } else {
-      if (_firstCheck) {
-        final prefs = await SharedPreferences.getInstance();
-        final rememberMe = prefs.getBool('remember_me') ?? true;
-
-        if (!rememberMe) {
-          await _authService.signOut();
-          // The logout will trigger another event with null, so we can just return
-          return;
-        }
-      }
-
+      // Firebase Auth persists sessions automatically.
+      // No remember_me check needed — user stays logged in until explicit logout.
       try {
         _currentUser = await _authService.getCurrentUserModel();
       } catch (_) {
@@ -56,8 +47,7 @@ class AuthProvider extends ChangeNotifier {
         );
       }
     }
-    
-    _firstCheck = false;
+
     _initialized = true;
     notifyListeners();
   }
@@ -225,6 +215,13 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     await _authService.signOut();
     _currentUser = null;
+    _isGuest = false;
+    notifyListeners();
+  }
+
+  void setGuestMode(bool value) {
+    _isGuest = value;
+    if (value) _currentUser = null; 
     notifyListeners();
   }
 
