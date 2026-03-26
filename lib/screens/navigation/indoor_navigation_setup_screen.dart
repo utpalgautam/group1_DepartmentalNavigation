@@ -42,12 +42,15 @@ class _IndoorNavigationSetupScreenState
   @override
   void initState() {
     super.initState();
+    debugPrint('IndoorNavigationSetupScreen: initState');
     _loadBuildings();
   }
 
   Future<void> _loadBuildings() async {
+    debugPrint('IndoorNavigationSetupScreen: _loadBuildings started');
     try {
       final buildings = await _firestoreService.getAllBuildings();
+      debugPrint('IndoorNavigationSetupScreen: _loadBuildings loaded ${buildings.length} buildings');
       if (mounted) {
         setState(() {
           _buildings = buildings;
@@ -175,44 +178,46 @@ class _IndoorNavigationSetupScreenState
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('IndoorNavigationSetupScreen: build (isLoading: $_isLoadingBuildings, buildings: ${_buildings.length})');
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: Stack(
         children: [
-          SafeArea(
-            bottom: false,
-            child: _isLoadingBuildings
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 120.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Custom Header matching Offline Maps
-                        Row(
-                          children: [
-                            Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.black,
-                                shape: BoxShape.circle,
+          Positioned.fill(
+            child: SafeArea(
+              bottom: false,
+              child: _isLoadingBuildings
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 120.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Custom Header matching Offline Maps
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.black,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                                  onPressed: () {
+                                    if (Navigator.canPop(context)) {
+                                      Navigator.pop(context);
+                                    } else {
+                                      Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (_) => const HomeScreen()));
+                                    }
+                                  },
+                                ),
                               ),
-                              child: IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                                onPressed: () {
-                                  if (Navigator.canPop(context)) {
-                                    Navigator.pop(context);
-                                  } else {
-                                    Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (_) => const HomeScreen()));
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            const Expanded(
-                              child: Text(
+                              const SizedBox(width: 20),
+                              const Text(
                                 'Navigate Inside Building',
                                 style: TextStyle(
                                   fontSize: 22,
@@ -220,132 +225,136 @@ class _IndoorNavigationSetupScreenState
                                   color: Colors.black,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        
-                        // Content Card
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: const [
-                              BoxShadow(color: Colors.black12, blurRadius: 10)
                             ],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              const Text(
-                                'Select Route',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black),
-                              ),
-                              const SizedBox(height: 24),
-                    _buildDropdown<BuildingModel>(
-                      label: '1. Building',
-                      hint: 'Select Building',
-                      value: _selectedBuilding,
-                      items: _buildings.map((b) {
-                        return DropdownMenuItem(
-                          value: b,
-                          child: Text(b.name),
-                        );
-                      }).toList(),
-                      onChanged: _onBuildingChanged,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildDropdown<int>(
-                      label: '2. Floor',
-                      hint: 'Select Floor',
-                      value: _selectedFloor,
-                      items: _availableFloors.map((f) {
-                        return DropdownMenuItem(
-                          value: f,
-                          child: Text(f == 0 ? 'Ground Floor (0)' : 'Floor $f'),
-                        );
-                      }).toList(),
-                      onChanged:
-                          _selectedBuilding == null ? null : _onFloorChanged,
-                    ),
-                    const SizedBox(height: 16),
-                    if (_isLoadingGraph)
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Center(child: CircularProgressIndicator()),
+                          const SizedBox(height: 24),
+                          
+                          // Content Card
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black12, blurRadius: 10)
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Text(
+                                  'Select Route',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black),
+                                ),
+                                const SizedBox(height: 24),
+                                _buildDropdown<BuildingModel>(
+                                  label: '1. Building',
+                                  hint: 'Select Building',
+                                  value: _selectedBuilding,
+                                  items: _buildings.map((b) {
+                                    return DropdownMenuItem(
+                                      value: b,
+                                      child: Text(b.name),
+                                    );
+                                  }).toList(),
+                                  onChanged: _onBuildingChanged,
+                                ),
+                                const SizedBox(height: 16),
+                                _buildDropdown<int>(
+                                  label: '2. Floor',
+                                  hint: 'Select Floor',
+                                  value: _selectedFloor,
+                                  items: _availableFloors.map((f) {
+                                    return DropdownMenuItem(
+                                      value: f,
+                                      child: Text(f == 0 ? 'Ground Floor (0)' : 'Floor $f'),
+                                    );
+                                  }).toList(),
+                                  onChanged:
+                                      _selectedBuilding == null ? null : _onFloorChanged,
+                                ),
+                                const SizedBox(height: 16),
+                                if (_isLoadingGraph)
+                                  const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Center(child: CircularProgressIndicator()),
+                                  ),
+                                _buildDropdown<GraphNode>(
+                                  label: '3. Start Node',
+                                  hint: 'Select Start Node',
+                                  value: _selectedStartNode,
+                                  items: _startNodes.map((n) {
+                                    return DropdownMenuItem(
+                                      value: n,
+                                      child: Text('${n.label} (${n.type})'),
+                                    );
+                                  }).toList(),
+                                  onChanged: _currentGraph == null
+                                      ? null
+                                      : (val) => setState(() => _selectedStartNode = val),
+                                ),
+                                const SizedBox(height: 16),
+                                _buildDropdown<GraphNode>(
+                                  label: '4. Destination Node',
+                                  hint: 'Select Destination Node',
+                                  value: _selectedEndNode,
+                                  items: _endNodes.map((n) {
+                                    return DropdownMenuItem(
+                                      value: n,
+                                      child: Text('${n.label} (${n.type})'),
+                                    );
+                                  }).toList(),
+                                  onChanged: _currentGraph == null
+                                      ? null
+                                      : (val) => setState(() => _selectedEndNode = val),
+                                ),
+                                const SizedBox(height: 32),
+                                Semantics(
+                                  label: 'Show Route',
+                                  button: true,
+                                  child: ElevatedButton(
+                                    onPressed: (_selectedBuilding == null ||
+                                            _selectedFloor == null ||
+                                            _selectedStartNode == null ||
+                                            _selectedEndNode == null ||
+                                            _currentGraph == null)
+                                        ? null
+                                        : _onShowRoute,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.black,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
+                                    ),
+                                    child: const Text('Show Route',
+                                        style: TextStyle(
+                                            fontSize: 16, fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    _buildDropdown<GraphNode>(
-                      label: '3. Start Node',
-                      hint: 'Select Start Node',
-                      value: _selectedStartNode,
-                      items: _startNodes.map((n) {
-                        return DropdownMenuItem(
-                          value: n,
-                          child: Text('${n.label} (${n.type})'),
-                        );
-                      }).toList(),
-                      onChanged: _currentGraph == null
-                          ? null
-                          : (val) => setState(() => _selectedStartNode = val),
                     ),
-                    const SizedBox(height: 16),
-                    _buildDropdown<GraphNode>(
-                      label: '4. Destination Node',
-                      hint: 'Select Destination Node',
-                      value: _selectedEndNode,
-                      items: _endNodes.map((n) {
-                        return DropdownMenuItem(
-                          value: n,
-                          child: Text('${n.label} (${n.type})'),
-                        );
-                      }).toList(),
-                      onChanged: _currentGraph == null
-                          ? null
-                          : (val) => setState(() => _selectedEndNode = val),
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: (_selectedBuilding == null ||
-                              _selectedFloor == null ||
-                              _selectedStartNode == null ||
-                              _selectedEndNode == null ||
-                              _currentGraph == null)
-                          ? null
-                          : _onShowRoute,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: const Text('Show Route',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      Positioned(
-              bottom: 30,
-              left: 24,
-              right: 24,
-              child: CustomBottomNavBar(
-                currentIndex: 2,
-                onTap: _onNavItemTapped,
-              ),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            bottom: 30,
+            left: 24,
+            right: 24,
+            child: CustomBottomNavBar(
+              currentIndex: 2,
+              onTap: _onNavItemTapped,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -368,20 +377,24 @@ class _IndoorNavigationSetupScreenState
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              isExpanded: true,
-              value: value,
-              hint: Text(hint),
-              items: items,
-              onChanged: onChanged,
+        Semantics(
+          label: hint,
+          container: true,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
+                isExpanded: true,
+                value: value,
+                hint: Text(hint),
+                items: items,
+                onChanged: onChanged,
+              ),
             ),
           ),
         ),

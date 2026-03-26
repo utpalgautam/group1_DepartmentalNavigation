@@ -29,33 +29,41 @@ class CustomBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(0, Icons.home_outlined), // Home
-          _buildNavItem(1, Icons.contacts_outlined), // Directory
-          _buildNavItem(2, Icons.apartment_outlined), // Navigate
-          _buildNavItem(3, Icons.map_outlined), // Offline Map
-          _buildNavItem(4, Icons.account_circle_outlined), // Profile
+          _buildNavItem(0, Icons.home_outlined, 'NavHome'), // Home
+          _buildNavItem(1, Icons.contacts_outlined, 'NavDirectory'), // Directory
+          _buildNavItem(2, Icons.apartment_outlined, 'NavBuilding'), // Navigate
+          _buildNavItem(3, Icons.map_outlined, 'NavMap'), // Offline Map
+          _buildNavItem(4, Icons.account_circle_outlined, 'NavProfile'), // Profile
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon) {
+  Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        width: isSelected ? 80 : 50,
-        height: 56,
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: Icon(
-          icon,
-          color: isSelected ? Colors.black : Colors.white,
-          size: 26,
+    return Semantics(
+      label: label,
+      container: true,
+      button: true,
+      child: Tooltip(
+        message: label,
+        child: GestureDetector(
+          onTap: () => onTap(index),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            width: isSelected ? 80 : 50,
+            height: 56,
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.black : Colors.white,
+              size: 26,
+            ),
+          ),
         ),
       ),
     );

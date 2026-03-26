@@ -154,11 +154,11 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Column(
+                Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Welcome back,',
                       style: TextStyle(
                         color: Color(0xFF555555),
@@ -168,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Hello,Utpal!',
+                      'Hello, $firstName!',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 28,

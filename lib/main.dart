@@ -26,9 +26,8 @@ void main() async {
   // 1. Check onboarding flag BEFORE anything else.
   final prefs = await SharedPreferences.getInstance();
   
-  // DEV PURPOSES ONLY: We are removing the flag so that your device "forgets" it already saw the onboarding.
-  // This will allow you to see the onboarding page when you start the app.
-  await prefs.remove(kHasSeenOnboarding); 
+  // DEV PURPOSES ONLY: Force onboarding seen
+  // await prefs.setBool(kHasSeenOnboarding, true);
   
   final hasSeenOnboarding = prefs.getBool(kHasSeenOnboarding) ?? false;
 
@@ -95,29 +94,37 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ── Step 1: onboarding gate ───────────────────────────────────────────
+    debugPrint('AuthWrapper Built: hasSeenOnboarding=$hasSeenOnboarding');
+    
+    // 1. If user hasn't seen onboarding, show it first.
     if (!hasSeenOnboarding) {
       return const OnboardingScreen();
     }
 
-    // ── Step 2: wait for Firebase auth to initialise ────────────────────
-    final auth = context.watch<app_auth.AuthProvider>();
-    if (!auth.isInitialized) {
-      return const _SplashScreen();
-    }
+    // 2. Otherwise, check authentication state via AuthProvider.
+    return Consumer<app_auth.AuthProvider>(
+      builder: (context, auth, _) {
+        // While initializing, show a splash screen.
+        if (!auth.isInitialized) {
+          return const _SplashScreen();
+        }
 
-    // ── Step 3: authenticated → home (with optional device lock) ────────
-    if (auth.isAuthenticated) {
-      final security = context.watch<SecurityProvider>();
+        // If authenticated, check for screen lock or go home.
+        if (auth.isAuthenticated) {
+          return Consumer<SecurityProvider>(
+            builder: (context, security, _) {
+              if (security.isDeviceLockEnabled && !security.isUnlocked) {
+                return _DeviceLockScreen(security: security);
+              }
+              return const HomeScreen();
+            },
+          );
+        }
 
-      if (security.isDeviceLockEnabled && !security.isUnlocked) {
-        return _DeviceLockScreen(security: security);
-      }
-      return const HomeScreen();
-    }
-
-    // ── Step 4: not authenticated → login ────────────────────────────────
-    return const LoginScreen();
+        // Not authenticated? Shove 'em to Login.
+        return const LoginScreen();
+      },
+    );
   }
 }
 

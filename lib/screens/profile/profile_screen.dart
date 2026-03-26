@@ -198,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       iconBgColor: Colors.blueGrey[50]!,
                       trailing: Switch(
                         value: security.isDeviceLockEnabled,
-                        activeThumbColor: Colors.white,
+                        activeColor: Colors.white,
                         activeTrackColor: Colors.blue[600],
                         onChanged: (value) async {
                           if (value) {

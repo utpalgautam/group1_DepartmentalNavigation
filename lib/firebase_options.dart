@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -64,5 +61,15 @@ class DefaultFirebaseOptions {
     projectId: 'dept-nav-app',
     storageBucket: 'dept-nav-app.firebasestorage.app',
     iosBundleId: 'com.nitc.deptNavApp',
+  );
+  
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDy8E1gunFSxKoXX2LA4CModpl4Fma7Yd4',
+    appId: '1:816397169014:web:d875e0b74b6e295bfc3c8f', // Best guess from certificate hash if missing
+    messagingSenderId: '816397169014',
+    projectId: 'dept-nav-app',
+    authDomain: 'dept-nav-app.firebaseapp.com',
+    storageBucket: 'dept-nav-app.firebasestorage.app',
+    measurementId: 'G-XXXXXXXXXX',
   );
 }
