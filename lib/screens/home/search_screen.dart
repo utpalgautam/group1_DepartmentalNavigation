@@ -269,6 +269,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildDefaultView() {
+    final auth = context.read<app_auth.AuthProvider>();
+    final isGuest = auth.isGuest;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +302,7 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 32),
           ],
           
-          if (_recentSearches.isNotEmpty) ...[
+          if (!isGuest && _recentSearches.isNotEmpty) ...[
             const Text(
               'Recent Searches',
               style: TextStyle(

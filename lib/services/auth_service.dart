@@ -232,15 +232,10 @@ class AuthService {
             'lastLogin': Timestamp.fromDate(now),
           });
         } else {
-          userModel = UserModel(
-            uid: user.uid,
-            email: email,
-            name: user.displayName ?? 'Google User',
-            userType: UserType.student,
-            createdAt: now,
-            lastLogin: now,
-          );
-          await _db.collection('users').doc(user.uid).set(userModel.toFirestore());
+          // Explicitly sign out of Firebase and Google so no ghost session remains
+          await _auth.signOut();
+          await GoogleSignIn().signOut();
+          throw 'No account found with this Google account. Please sign up first.';
         }
       }
 

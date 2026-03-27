@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart' as app_auth;
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,6 +14,9 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<app_auth.AuthProvider>();
+    final isGuest = auth.isGuest;
+
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -27,13 +32,14 @@ class CustomBottomNavBar extends StatelessWidget {
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildNavItem(0, Icons.home_outlined, 'NavHome'), // Home
           _buildNavItem(1, Icons.contacts_outlined, 'NavDirectory'), // Directory
           _buildNavItem(2, Icons.apartment_outlined, 'NavBuilding'), // Navigate
           _buildNavItem(3, Icons.map_outlined, 'NavMap'), // Offline Map
-          _buildNavItem(4, Icons.account_circle_outlined, 'NavProfile'), // Profile
+          if (!isGuest)
+            _buildNavItem(4, Icons.account_circle_outlined, 'NavProfile'), // Profile
         ],
       ),
     );

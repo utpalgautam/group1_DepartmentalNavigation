@@ -26,8 +26,9 @@ void main() async {
   // 1. Check onboarding flag BEFORE anything else.
   final prefs = await SharedPreferences.getInstance();
   
-  // DEV PURPOSES ONLY: Force onboarding seen
-  // await prefs.setBool(kHasSeenOnboarding, true);
+  // DEV PURPOSES ONLY: Uncomment the line below to reset onboarding locally for testing.
+  // DO NOT commit this line uncommented — onboarding should only show once in production.
+  // await prefs.remove(kHasSeenOnboarding);
   
   final hasSeenOnboarding = prefs.getBool(kHasSeenOnboarding) ?? false;
 

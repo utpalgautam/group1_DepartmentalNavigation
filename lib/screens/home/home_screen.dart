@@ -10,7 +10,7 @@ import '../directory/directory_screen.dart';
 import '../map/offline_maps_screen.dart';
 import '../map/explore_map_screen.dart';
 import '../../widgets/bottom_nav_bar.dart';
-
+import '../../main.dart' show AuthWrapper;
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
             left: 0,
             right: 0,
             height: heroHeight,
-            child: _buildHeroImage(firstName, profileImageUrl),
+            child: _buildHeroImage(context, firstName, profileImageUrl),
           ),
 
           // ── 2. White card – overlaps image, rounded top ───────────────
@@ -125,7 +125,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ── Hero image with greeting + avatar ────────────────────────────────────
-  Widget _buildHeroImage(String firstName, String? profileImageUrl) {
+  Widget _buildHeroImage(BuildContext context, String firstName, String? profileImageUrl) {
+    final auth = context.watch<app_auth.AuthProvider>();
+    final isGuest = auth.isGuest;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -158,18 +161,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Welcome back,',
-                      style: TextStyle(
+                    Text(
+                      isGuest ? 'Welcome,' : 'Welcome back,',
+                      style: const TextStyle(
                         color: Color(0xFF555555),
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Hello, $firstName!',
-                      style: TextStyle(
+                      isGuest ? 'Hello User!' : 'Hello, $firstName!',
+                      style: const TextStyle(
                         color: Colors.black,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -178,31 +181,61 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                GestureDetector(
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const ProfileScreen())),
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.pastelOrange,
-                      border: Border.all(color: Colors.white, width: 2.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                      image: _getAvatarImage(profileImageUrl),
+                if (!isGuest)
+                  GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const ProfileScreen())),
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.pastelOrange,
+                        border: Border.all(color: Colors.white, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                        image: _getAvatarImage(profileImageUrl),
+                      ),
+                      child: profileImageUrl == null || profileImageUrl.isEmpty
+                          ? const Icon(Icons.person,
+                              color: Colors.white, size: 28)
+                          : null,
                     ),
-                    child: profileImageUrl == null || profileImageUrl.isEmpty
-                        ? const Icon(Icons.person,
-                            color: Colors.white, size: 28)
-                        : null,
+                  )
+                else
+                  GestureDetector(
+                    onTap: () {
+                      auth.setGuestMode(false);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AuthWrapper(hasSeenOnboarding: true)),
+                        (route) => false,
+                      );
+                    },
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        border: Border.all(color: Colors.black12, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.logout,
+                          color: Colors.black, size: 24),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
