@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// Google Maps–style turn-by-turn navigation header (dark theme).
+/// Uber-style light navigation top bar.
 class TurnByTurnWidget extends StatelessWidget {
   final String instruction;
   final String distance;
   final int sign; // GraphHopper sign for the current instruction
   final VoidCallback onClose;
-  final String? nextInstruction; // "Then turn right" pill
-  final int? nextSign; // GraphHopper sign for the next instruction
+  final String? nextInstruction;
+  final int? nextSign;
+  final bool isSpeaking;
 
   const TurnByTurnWidget({
     super.key,
@@ -17,6 +18,7 @@ class TurnByTurnWidget extends StatelessWidget {
     required this.onClose,
     this.nextInstruction,
     this.nextSign,
+    this.isSpeaking = false,
   });
 
   @override
@@ -27,37 +29,36 @@ class TurnByTurnWidget extends StatelessWidget {
       children: [
         // ── Main Turn Banner ───────────────────────────────────────────────
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 0),
           decoration: BoxDecoration(
-            color: const Color(0xFF1C6B45), // Google Maps nav green
-            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 20,
-                offset: const Offset(0, 6),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Direction Icon
+                // Direction Icon (Black Box)
                 Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(
-                    color: Colors.white24,
-                    shape: BoxShape.circle,
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     _getDirectionIcon(sign),
                     color: Colors.white,
-                    size: 26,
+                    size: 28,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 // Instruction + Distance
                 Expanded(
                   child: Column(
@@ -66,84 +67,59 @@ class TurnByTurnWidget extends StatelessWidget {
                       Text(
                         instruction,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         distance,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          color: Colors.black.withOpacity(0.5),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Microphone Icon (placeholder/decorative like in image)
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.mic_rounded,
-                    color: Color(0xFF1C6B45),
-                    size: 24,
-                  ),
-                ),
+                // Microphone Icon with Glow
+                _MicrophoneButton(isSpeaking: isSpeaking),
               ],
             ),
           ),
         ),
 
-        // ── "Then" Pill ───────────────────────────────────────────────────
+        // ── Next Move Box (Attached to the left) ──────────────────────────
         if (nextInstruction != null)
           Padding(
-            padding: const EdgeInsets.only(top: 8, left: 4),
+            padding: const EdgeInsets.only(top: 0, left: 16),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1B2340),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    _getDirectionIcon(nextSign ?? 0),
-                    color: Colors.white70,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 6),
                   Text(
                     'Then $nextInstruction',
                     style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    _getDirectionIcon(nextSign ?? 0),
+                    color: Colors.white,
+                    size: 14,
                   ),
                 ],
               ),
@@ -170,11 +146,43 @@ class TurnByTurnWidget extends StatelessWidget {
       case 4:
         return Icons.flag_rounded;
       case 5:
-        return Icons.sync_rounded; // Rerouting
+        return Icons.sync_rounded;
       case 6:
-        return Icons.keyboard_double_arrow_right; // Waypoint
+        return Icons.keyboard_double_arrow_right;
       default:
         return Icons.straight_rounded;
     }
+  }
+}
+
+class _MicrophoneButton extends StatelessWidget {
+  final bool isSpeaking;
+  const _MicrophoneButton({required this.isSpeaking});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F4F7),
+        shape: BoxShape.circle,
+        boxShadow: isSpeaking
+            ? [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.4),
+                  blurRadius: 15,
+                  spreadRadius: 5,
+                ),
+              ]
+            : [],
+      ),
+      child: Icon(
+        Icons.mic_rounded,
+        color: isSpeaking ? Colors.blue : Colors.black,
+        size: 22,
+      ),
+    );
   }
 }

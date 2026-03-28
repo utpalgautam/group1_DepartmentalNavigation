@@ -8,8 +8,11 @@ import '../../models/building_model.dart';
 import '../../core/constants/app_constants.dart';
 import 'widgets/turn_by_turn_widget.dart';
 import 'widgets/custom_navigation_controls.dart';
+import 'widgets/start_navigation_header.dart';
 import 'indoor_navigation_screen.dart';
 import '../../core/utils/navigation_utils.dart';
+import '../../models/location_model.dart';
+import '../../services/firestore_service.dart';
 
 enum MapFollowMode { northUp, headingUp }
 
@@ -47,6 +50,9 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
   MapFollowMode _followMode = MapFollowMode.northUp;
   bool _isAutoRotating = false;
   DateTime? _lastDrawTimestamp; // Throttling map drawing
+  bool _hasSpokenDestination = false;
+  LocationModel? _destinationLocation;
+  final FirestoreService _firestoreService = FirestoreService();
 
   // ── User Marker (smooth animated blue dot) ────────────────────────────
   Symbol? _userMarker;
@@ -65,6 +71,16 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..addListener(_onMarkerAnimationTick);
+    _fetchDestinationDetails();
+  }
+
+  Future<void> _fetchDestinationDetails() async {
+    if (widget.destinationId != null) {
+      final loc = await _firestoreService.getLocation(widget.destinationId!);
+      if (mounted) {
+        setState(() => _destinationLocation = loc);
+      }
+    }
   }
 
   @override
@@ -148,6 +164,20 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
 
     if (!provider.isNavigating) {
       _startPassiveTracking();
+      // Speak destination flow on load
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_hasSpokenDestination) {
+          _hasSpokenDestination = true;
+          final building = widget.targetBuilding?.name ?? "Destination";
+          final floor = _destinationLocation?.floor == 0 ? "Ground Floor" 
+              : (_destinationLocation?.floor == 1 ? "First Floor" 
+              : (_destinationLocation?.floor == 2 ? "Second Floor" 
+              : (_destinationLocation?.floor == 3 ? "Third Floor" 
+              : (_destinationLocation?.floor != null ? "Floor ${_destinationLocation!.floor}" : "Second Floor"))));
+          final cabin = widget.destinationName ?? "";
+          provider.speak("Navigating to $building. Flow: $building, $floor, $cabin.");
+        }
+      });
     }
   }
 
@@ -330,7 +360,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
         "carto",
         "3d-buildings",
         const FillExtrusionLayerProperties(
-          fillExtrusionColor: '#1e3a5f', // Dark blue tint for dark map
+          fillExtrusionColor: '#E0E0E0', 
           fillExtrusionHeight: ["get", "render_height"],
           fillExtrusionBase: ["get", "render_min_height"],
           fillExtrusionOpacity: 0.7,
@@ -679,7 +709,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
   // ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final bool showCompass = _currentBearing.abs() > 1.0;
+    const bool showCompass = true;
 
     return Consumer<NavigationProvider>(
       builder: (context, navProvider, child) {
@@ -706,7 +736,7 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
                   zoom: AppConstants.defaultMapZoom,
                   tilt: 45,
                 ),
-                styleString: _NavMapStyle.darkMatter,
+                styleString: _NavMapStyle.positron,
                 myLocationEnabled: false, // custom marker for smooth animation
                 myLocationRenderMode: MyLocationRenderMode.normal,
                 compassEnabled: false, // custom compass button
@@ -717,17 +747,17 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
                 scrollGesturesEnabled: true,
               ),
 
-              // ── Pre-navigation Destination Card ────────────────────────
+              // ── Pre-navigation Destination Header ──────────────────────
               if (!navProvider.isNavigating)
                 Positioned(
-                  top: 40,
+                  top: 50,
                   left: 16,
                   right: 16,
-                  child: _DestinationPreviewCard(
-                    name: widget.destinationName ??
-                        widget.targetBuilding?.name ??
-                        'Selected Location',
-                    onClose: () => Navigator.pop(context),
+                  child: StartNavigationHeader(
+                    buildingName: widget.targetBuilding?.name ?? "Building",
+                    floorNumber: _destinationLocation?.floor,
+                    cabinName: widget.destinationName ?? "Cabin",
+                    isSpeaking: navProvider.isSpeaking,
                   ),
                 ),
 
@@ -748,74 +778,75 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
                     sign: navProvider.currentSign,
                     nextInstruction: navProvider.nextInstruction,
                     nextSign: navProvider.nextSign,
+                    isSpeaking: navProvider.isSpeaking,
                     onClose: () => _stopNavigation(navProvider),
                   ),
                 ),
 
               // ── Top-Right Floating Button Stack ──────────────────────
-              SafeArea(
+              if (navProvider.isNavigating)
+                SafeArea(
                 child: Align(
                   alignment: Alignment.topRight,
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 12, top: 8),
+                    padding: const EdgeInsets.only(right: 16, top: 110),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // 1. Compass (only if rotated)
-                        if (showCompass)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _NavFloatingButton(
-                              child: Transform.rotate(
-                                angle: -_currentBearing * 3.14159265 / 180,
-                                child: const Icon(Icons.navigation,
-                                    color: Colors.redAccent, size: 22),
-                              ),
-                              onTap: _resetNorth,
-                            ),
-                          ),
-                        
-                        // 2. Search Button (Decorative/Placeholder)
+                        // 1. Compass
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: _NavFloatingButton(
-                            child: const Icon(Icons.search_rounded,
-                                color: Colors.white, size: 24),
-                            onTap: () {}, // No-op placeholder
+                            child: Transform.rotate(
+                              angle: -_currentBearing * 3.14159265 / 180,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  const Icon(Icons.navigation,
+                                      color: Colors.white, size: 26),
+                                  ClipRect(
+                                    clipper: _TopHalfClipper(),
+                                    child: const Icon(Icons.navigation,
+                                        color: Colors.redAccent, size: 26),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            onTap: _resetNorth,
                           ),
                         ),
+                        
 
-                        // 3. Voice Toggle (if navigating)
+                        // 2. Voice Toggle (if navigating)
                         if (navProvider.isNavigating)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.only(bottom: 12),
                             child: _NavFloatingButton(
                               child: Icon(
                                 navProvider.isVoiceEnabled
                                     ? Icons.volume_up_rounded
                                     : Icons.volume_off_rounded,
-                                color: navProvider.isVoiceEnabled
-                                    ? Colors.white
-                                    : Colors.white54,
-                                size: 22,
+                                color: Colors.white,
+                                size: 24,
                               ),
                               onTap: navProvider.toggleVoice,
                             ),
                           ),
 
                         // 4. Follow Mode Toggle
-                        _NavFloatingButton(
-                          child: Icon(
-                            _followMode == MapFollowMode.headingUp
-                                ? Icons.navigation_rounded
-                                : Icons.explore_outlined,
-                            color: _followMode == MapFollowMode.headingUp
-                                ? Colors.blueAccent
-                                : Colors.white,
-                            size: 22,
+                        if (!navProvider.isNavigating)
+                          _NavFloatingButton(
+                            child: Icon(
+                              _followMode == MapFollowMode.headingUp
+                                  ? Icons.navigation_rounded
+                                  : Icons.explore_rounded,
+                              color: _followMode == MapFollowMode.headingUp
+                                  ? Colors.blueAccent
+                                  : Colors.white,
+                              size: 24,
+                            ),
+                            onTap: _toggleFollowMode,
                           ),
-                          onTap: _toggleFollowMode,
-                        ),
                       ],
                     ),
                   ),
@@ -823,29 +854,27 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
               ),
 
               // ── Zoom Controls (right-side) ─────────────────────────────
-              Positioned(
-                right: 12,
-                bottom: 220,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _NavFloatingButton(
-                      child: const Icon(Icons.add,
-                          color: Colors.white, size: 22),
-                      onTap: _zoomIn,
-                    ),
-                    const SizedBox(height: 2),
-                    Container(
-                        width: 28, height: 1, color: Colors.white12),
-                    const SizedBox(height: 2),
-                    _NavFloatingButton(
-                      child: const Icon(Icons.remove,
-                          color: Colors.white, size: 22),
-                      onTap: _zoomOut,
-                    ),
-                  ],
+              if (navProvider.isNavigating)
+                Positioned(
+                  right: 16,
+                  bottom: 160,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _NavFloatingButton(
+                        child: const Icon(Icons.add,
+                            color: Colors.white, size: 24),
+                        onTap: _zoomIn,
+                      ),
+                      const SizedBox(height: 12),
+                      _NavFloatingButton(
+                        child: const Icon(Icons.remove,
+                            color: Colors.white, size: 24),
+                        onTap: _zoomOut,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
               // ── Recenter Button (bottom-left) ──────────────────────────
               if (!_isCentered)
@@ -863,27 +892,25 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
                 child: CustomNavigationControls(
                   isNavigating: navProvider.isNavigating,
                   isLoading: navProvider.isLoadingRoute,
-                    instruction: navProvider.currentInstruction ??
-                        'Follow the route',
-                    distance: navProvider.distanceToNextStep != null
-                        ? (navProvider.distanceToNextStep! < 1000
-                            ? '${navProvider.distanceToNextStep!.toStringAsFixed(0)} m'
-                            : '${(navProvider.distanceToNextStep! / 1000).toStringAsFixed(1)} km')
-                        : (navProvider.distanceToDestination != null
-                            ? '${navProvider.distanceToDestination!.toStringAsFixed(0)} m'
-                            : '...'),
-                    time: navProvider.isNavigating
-                        ? (navProvider.remainingTime != null
-                            ? '${navProvider.remainingTime} min'
-                            : '...')
-                        : (navProvider.currentRoute != null
-                            ? '${(navProvider.currentRoute!.time / 60000).ceil()} min'
-                            : '...'),
-                    arrivalTime: navProvider.arrivalTime,
-                    onStartNavigation: () => _startNavigation(navProvider),
-                    onStopNavigation: () => _stopNavigation(navProvider),
-                    onConfirmArrival: () =>
-                        navProvider.switchToIndoorNavigation(),
+                  instruction: navProvider.isNavigating
+                      ? (navProvider.currentInstruction ?? 'Follow the route')
+                      : (widget.targetBuilding?.name ?? 'Head to Entrance'),
+                  distance: navProvider.distanceToDestination != null
+                      ? (navProvider.distanceToDestination! < 1000
+                          ? '${navProvider.distanceToDestination!.toStringAsFixed(0)} m'
+                          : '${(navProvider.distanceToDestination! / 1000).toStringAsFixed(1)} km')
+                      : '...',
+                  time: navProvider.remainingTime != null
+                      ? '${navProvider.remainingTime} min'
+                      : (navProvider.currentRoute != null
+                          ? '${(navProvider.currentRoute!.time / 60000).ceil()} min'
+                          : '...'),
+                  arrivalTime: navProvider.arrivalTime,
+                  base64Image: widget.targetEntryPoint?.imageUrl ?? widget.targetBuilding?.imageUrl,
+                  onStartNavigation: () => _startNavigation(navProvider),
+                  onStopNavigation: () => _stopNavigation(navProvider),
+                  onConfirmArrival: () =>
+                      navProvider.switchToIndoorNavigation(),
                 ),
               ),
 
@@ -898,46 +925,56 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
 
   Widget _buildArrivalOverlay() {
     return Container(
-      color: Colors.black54,
+      color: Colors.black26,
       child: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: const Color(0xFF151A2D),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white10),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 30,
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle_outline,
-                  color: Color(0xFF1C6B45), size: 64),
+              const Icon(Icons.check_circle_rounded,
+                  color: Colors.black, size: 64),
               const SizedBox(height: 16),
               Text(
                 'Arrived at ${widget.targetBuilding?.name ?? 'Destination'}',
                 style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                  letterSpacing: -0.5,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              const Text(
+              const SizedBox(height: 12),
+              Text(
                 'Switching to Indoor Navigation...',
-                style: TextStyle(color: Colors.white60),
+                style: TextStyle(
+                  color: Colors.black.withOpacity(0.5),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1C6B45),
+                  backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 32, vertical: 14),
+                      horizontal: 40, vertical: 16),
                 ),
                 onPressed: () => _navigateToIndoorScreen(context),
                 child: const Text(
@@ -957,73 +994,8 @@ class _OutdoorNavigationScreenState extends State<OutdoorNavigationScreen>
 // Destination Preview Card
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _DestinationPreviewCard extends StatelessWidget {
-  final String name;
-  final VoidCallback onClose;
-
-  const _DestinationPreviewCard({required this.name, required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B2340),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A73E8).withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.navigation_rounded,
-                color: Color(0xFF1A73E8), size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Destination',
-                  style: TextStyle(fontSize: 11, color: Colors.white54),
-                ),
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white54),
-            onPressed: onClose,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Floating UI Controls
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _NavFloatingButton extends StatelessWidget {
   final Widget child;
   final VoidCallback onTap;
@@ -1032,14 +1004,14 @@ class _NavFloatingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF1C1C1E),
-      shape: const CircleBorder(),
-      elevation: 6,
-      shadowColor: Colors.black54,
+      color: Colors.black,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 4,
+      shadowColor: Colors.black45,
       child: InkWell(
-        customBorder: const CircleBorder(),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        child: SizedBox(width: 48, height: 48, child: Center(child: child)),
+        child: SizedBox(width: 46, height: 46, child: Center(child: child)),
       ),
     );
   }
@@ -1052,10 +1024,10 @@ class _RecenterPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF1C1C1E),
+      color: Colors.white,
       borderRadius: BorderRadius.circular(28),
-      elevation: 6,
-      shadowColor: Colors.black54,
+      elevation: 4,
+      shadowColor: Colors.black26,
       child: InkWell(
         borderRadius: BorderRadius.circular(28),
         onTap: onTap,
@@ -1067,14 +1039,14 @@ class _RecenterPill extends StatelessWidget {
               Transform.rotate(
                 angle: -0.785,
                 child: const Icon(Icons.navigation,
-                    color: Colors.white, size: 18),
+                    color: Colors.black, size: 18),
               ),
               const SizedBox(width: 8),
               const Text(
                 'Re-centre',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w800,
                   fontSize: 14,
                 ),
               ),
@@ -1093,4 +1065,16 @@ class _RecenterPill extends StatelessWidget {
 class _NavMapStyle {
   static const String darkMatter =
       'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+  static const String positron =
+      'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+}
+
+class _TopHalfClipper extends CustomClipper<Rect> {
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTRB(0, 0, size.width, size.height / 2);
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Rect> oldClipper) => false;
 }

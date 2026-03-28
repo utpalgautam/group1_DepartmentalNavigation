@@ -16,9 +16,26 @@ class VoiceNavigationService {
   double? _lastSpokenDistance;
 
   bool get isVoiceEnabled => _isVoiceEnabled;
+  bool _isSpeaking = false;
+  bool get isSpeaking => _isSpeaking;
 
   Future<void> _initTts() async {
     _flutterTts = FlutterTts();
+
+    _flutterTts.setStartHandler(() {
+      _isSpeaking = true;
+      if (onSpeechStateChanged != null) onSpeechStateChanged!();
+    });
+
+    _flutterTts.setCompletionHandler(() {
+      _isSpeaking = false;
+      if (onSpeechStateChanged != null) onSpeechStateChanged!();
+    });
+
+    _flutterTts.setErrorHandler((msg) {
+      _isSpeaking = false;
+      if (onSpeechStateChanged != null) onSpeechStateChanged!();
+    });
 
     // Configure TTS
     await _flutterTts.setLanguage("en-US");
@@ -38,6 +55,8 @@ class VoiceNavigationService {
       );
     }
   }
+
+  VoidCallback? onSpeechStateChanged;
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();

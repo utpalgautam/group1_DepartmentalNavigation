@@ -49,4 +49,5 @@ flutter:
     - assets/maps/
     - assets/icons/
     - assets/images/onboarding/
+    - assets/images/
     - lib/screens/home/image 36.png

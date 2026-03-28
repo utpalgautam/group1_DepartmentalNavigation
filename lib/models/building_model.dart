@@ -7,12 +7,14 @@ class EntryPoint {
   final String label;
   final double latitude;
   final double longitude;
+  final String? imageUrl;
 
   EntryPoint({
     required this.id,
     required this.label,
     required this.latitude,
     required this.longitude,
+    this.imageUrl,
   });
 
   factory EntryPoint.fromJson(Map<String, dynamic> json) => EntryPoint(
@@ -20,6 +22,7 @@ class EntryPoint {
         label: json['label'] ?? '',
         latitude: (json['latitude'] ?? 0.0).toDouble(),
         longitude: (json['longitude'] ?? 0.0).toDouble(),
+        imageUrl: json['imageUrl'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -27,6 +30,7 @@ class EntryPoint {
         'label': label,
         'latitude': latitude,
         'longitude': longitude,
+        if (imageUrl != null) 'imageUrl': imageUrl,
       };
 }
 

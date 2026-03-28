@@ -90,6 +90,7 @@ class NavigationProvider extends ChangeNotifier {
 
   NavigationProvider() {
     _voiceService.init();
+    _voiceService.onSpeechStateChanged = () => notifyListeners();
   }
 
 
@@ -147,10 +148,17 @@ class NavigationProvider extends ChangeNotifier {
   String? get routeError => _routeError;
   List<LatLng> get nextSegmentCoordinates => _nextSegmentCoordinates;
   bool get isVoiceEnabled => _voiceService.isVoiceEnabled;
+  bool get isSpeaking => _voiceService.isSpeaking;
 
   void toggleVoice() {
     _voiceService.toggleVoice();
     notifyListeners();
+  }
+
+  void speak(String text) {
+    if (_voiceService.isVoiceEnabled) {
+      _voiceService.speak(text);
+    }
   }
 
   bool get isPdrEnabled => _isPdrEnabled;
